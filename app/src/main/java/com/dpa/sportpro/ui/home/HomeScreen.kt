@@ -2,6 +2,7 @@ package com.dpa.sportpro.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,8 @@ import com.dpa.sportpro.ui.theme.TextWhite
 @Composable
 fun HomeScreen(
     userProfile: UserProfile,
+    onAcademiesClick: () -> Unit = {},
+    onPlayerProfileClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     Surface(
@@ -157,7 +160,12 @@ fun HomeScreen(
 
             when (userProfile.role) {
                 UserRole.COACH -> {
-                    FeatureCard("Gestión de Plantilla", "Control de asistencias y ficha técnica", Icons.Default.Group)
+                    FeatureCard(
+                        "Gestión de Plantilla",
+                        "Control de asistencias y ficha técnica",
+                        Icons.Default.Group,
+                        onClick = onPlayerProfileClick
+                    )
                     FeatureCard("Planes de Entrenamiento", "Asignación de ejercicios y convocatorias", Icons.Default.SportsSoccer)
                     FeatureCard("Calendario de Partidos", "Programación de fechas y rivales", Icons.Default.CalendarMonth)
                 }
@@ -167,13 +175,29 @@ fun HomeScreen(
                     FeatureCard("Ficha Médica y Deportiva", "Registro de salud y evaluaciones", Icons.Default.Badge)
                 }
                 UserRole.PARENT -> {
-                    FeatureCard("Mis Hijos Vinculados", "Monitoreo de actividad y asistencias", Icons.Default.Group)
+                    FeatureCard(
+                        "Mis Hijos Vinculados",
+                        "Ficha deportiva de Mateo Silva Rossi",
+                        Icons.Default.Group,
+                        onClick = onPlayerProfileClick
+                    )
                     FeatureCard("Autorizaciones y Cuotas", "Aprobaciones de viajes y estado de pagos", Icons.Default.Badge)
                     FeatureCard("Calendario Familiar", "Horarios de partidos y eventos", Icons.Default.CalendarMonth)
                 }
                 UserRole.ADMIN -> {
                     FeatureCard("Gestión Global de Usuarios", "Aprobación de cuentas y asignación de roles", Icons.Default.Group)
-                    FeatureCard("Configuración de Equipos", "Creación de categorías y ligas", Icons.Default.Settings)
+                    FeatureCard(
+                        "Configuración de Equipos",
+                        "Registro de academias, categorías y directores técnicos",
+                        Icons.Default.Settings,
+                        onClick = onAcademiesClick
+                    )
+                    FeatureCard(
+                        "Ficha Técnica de Jugadores",
+                        "Datos deportivos y evolución física",
+                        Icons.Default.Person,
+                        onClick = onPlayerProfileClick
+                    )
                     FeatureCard("Reportes del Club", "Métricas financieras y deportivas", Icons.Default.Badge)
                 }
             }
@@ -205,12 +229,14 @@ fun HomeScreen(
 fun FeatureCard(
     title: String,
     subtitle: String,
-    icon: ImageVector
+    icon: ImageVector,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .padding(bottom = 12.dp)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = CardBackground)
     ) {

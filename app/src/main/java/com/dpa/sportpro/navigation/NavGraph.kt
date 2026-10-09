@@ -8,8 +8,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.dpa.sportpro.data.model.UserProfile
 import com.dpa.sportpro.model.UserRole
+import com.dpa.sportpro.ui.academy.AcademiesScreen
 import com.dpa.sportpro.ui.home.HomeScreen
 import com.dpa.sportpro.ui.login.LoginScreen
+import com.dpa.sportpro.ui.player.PlayerTechnicalProfileScreen
 import com.dpa.sportpro.ui.register.RegisterScreen
 
 @Composable
@@ -27,7 +29,10 @@ fun SportProNavGraph(
                     navController.navigate(Screen.Register.route)
                 },
                 onNavigateToHome = { userProfile ->
-                    val route = Screen.Home.createRoute(userProfile.role.code, userProfile.names)
+                    val fullName = listOf(userProfile.names, userProfile.lastNames)
+                        .filter { it.isNotBlank() }
+                        .joinToString(" ")
+                    val route = Screen.Home.createRoute(userProfile.role.code, fullName)
                     navController.navigate(route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -40,6 +45,27 @@ fun SportProNavGraph(
                 onNavigateToLogin = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(route = Screen.Academies.route) {
+            AcademiesScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screen.PlayerProfile.route,
+            arguments = listOf(
+                navArgument("viewerRole") { type = NavType.StringType },
+                navArgument("viewerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            PlayerTechnicalProfileScreen(
+                viewerRole = viewerRole,
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -64,6 +90,14 @@ fun SportProNavGraph(
 
             HomeScreen(
                 userProfile = userProfile,
+                onAcademiesClick = {
+                    navController.navigate(Screen.Academies.route)
+                },
+                onPlayerProfileClick = {
+                    navController.navigate(
+                        Screen.PlayerProfile.createRoute(userRole.code, userProfile.names)
+                    )
+                },
                 onLogoutClick = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
