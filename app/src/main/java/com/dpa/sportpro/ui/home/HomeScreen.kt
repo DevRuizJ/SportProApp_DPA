@@ -55,6 +55,12 @@ fun HomeScreen(
     userProfile: UserProfile,
     onAcademiesClick: () -> Unit = {},
     onPlayerProfileClick: () -> Unit = {},
+    onTrainingPlannerClick: () -> Unit = {},
+    onMonthlyFeesClick: () -> Unit = {},
+    onAttendanceClick: () -> Unit = {},
+    onConvocationsClick: () -> Unit = {},
+    onTacticalLineupClick: () -> Unit = {},
+    onEventCatalogClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     Surface(
@@ -166,13 +172,52 @@ fun HomeScreen(
                         Icons.Default.Group,
                         onClick = onPlayerProfileClick
                     )
-                    FeatureCard("Planes de Entrenamiento", "Asignación de ejercicios y convocatorias", Icons.Default.SportsSoccer)
-                    FeatureCard("Calendario de Partidos", "Programación de fechas y rivales", Icons.Default.CalendarMonth)
+                    FeatureCard(
+                        "Planificar Sesión",
+                        "Objetivos, ejercicios y preparación táctica",
+                        Icons.Default.SportsSoccer,
+                        onClick = onTrainingPlannerClick
+                    )
+                    FeatureCard(
+                        "Control de Asistencia",
+                        "Registra participación y puntualidad del equipo",
+                        Icons.Default.Badge,
+                        onClick = onAttendanceClick
+                    )
+                    FeatureCard(
+                        "Convocatorias",
+                        "Publica partidos y revisa disponibilidad del equipo",
+                        Icons.Default.CalendarMonth,
+                        onClick = onConvocationsClick
+                    )
+                    FeatureCard(
+                        "Alineación Táctica",
+                        "Arma el once titular y los suplentes",
+                        Icons.Default.SportsSoccer,
+                        onClick = onTacticalLineupClick
+                    )
+                    FeatureCard(
+                        "Catálogo de Eventos",
+                        "Configura acciones del partido por categoría",
+                        Icons.Default.Badge,
+                        onClick = onEventCatalogClick
+                    )
                 }
                 UserRole.PLAYER -> {
                     FeatureCard("Mis Estadísticas", "Rendimiento, minutos y goles de la temporada", Icons.Default.SportsSoccer)
-                    FeatureCard("Próximos Entrenamientos", "Horarios y convocatorias asignadas", Icons.Default.CalendarMonth)
+                    FeatureCard(
+                        "Convocatorias",
+                        "Confirma tu disponibilidad para los partidos",
+                        Icons.Default.CalendarMonth,
+                        onClick = onConvocationsClick
+                    )
                     FeatureCard("Ficha Médica y Deportiva", "Registro de salud y evaluaciones", Icons.Default.Badge)
+                    FeatureCard(
+                        "Mis Mensualidades",
+                        "Consulta el estado de tus cuotas",
+                        Icons.Default.CalendarMonth,
+                        onClick = onMonthlyFeesClick
+                    )
                 }
                 UserRole.PARENT -> {
                     FeatureCard(
@@ -181,8 +226,18 @@ fun HomeScreen(
                         Icons.Default.Group,
                         onClick = onPlayerProfileClick
                     )
-                    FeatureCard("Autorizaciones y Cuotas", "Aprobaciones de viajes y estado de pagos", Icons.Default.Badge)
-                    FeatureCard("Calendario Familiar", "Horarios de partidos y eventos", Icons.Default.CalendarMonth)
+                    FeatureCard(
+                        "Autorizaciones y Cuotas",
+                        "Consulta el estado de las mensualidades vinculadas",
+                        Icons.Default.Badge,
+                        onClick = onMonthlyFeesClick
+                    )
+                    FeatureCard(
+                        "Convocatorias",
+                        "Responde por los jugadores vinculados",
+                        Icons.Default.CalendarMonth,
+                        onClick = onConvocationsClick
+                    )
                 }
                 UserRole.ADMIN -> {
                     FeatureCard("Gestión Global de Usuarios", "Aprobación de cuentas y asignación de roles", Icons.Default.Group)
@@ -197,6 +252,18 @@ fun HomeScreen(
                         "Datos deportivos y evolución física",
                         Icons.Default.Person,
                         onClick = onPlayerProfileClick
+                    )
+                    FeatureCard(
+                        "Mensualidades",
+                        "Control interno de cuotas por jugador y periodo",
+                        Icons.Default.CalendarMonth,
+                        onClick = onMonthlyFeesClick
+                    )
+                    FeatureCard(
+                        "Catálogo de Eventos",
+                        "Configura acciones del partido por categoría",
+                        Icons.Default.Badge,
+                        onClick = onEventCatalogClick
                     )
                     FeatureCard("Reportes del Club", "Métricas financieras y deportivas", Icons.Default.Badge)
                 }

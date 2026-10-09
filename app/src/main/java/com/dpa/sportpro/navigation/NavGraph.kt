@@ -9,10 +9,16 @@ import androidx.navigation.navArgument
 import com.dpa.sportpro.data.model.UserProfile
 import com.dpa.sportpro.model.UserRole
 import com.dpa.sportpro.ui.academy.AcademiesScreen
+import com.dpa.sportpro.ui.attendance.AttendanceScreen
+import com.dpa.sportpro.ui.convocation.ConvocationScreen
+import com.dpa.sportpro.ui.events.EventCatalogScreen
+import com.dpa.sportpro.ui.fees.MonthlyFeesScreen
 import com.dpa.sportpro.ui.home.HomeScreen
 import com.dpa.sportpro.ui.login.LoginScreen
+import com.dpa.sportpro.ui.lineup.TacticalLineupScreen
 import com.dpa.sportpro.ui.player.PlayerTechnicalProfileScreen
 import com.dpa.sportpro.ui.register.RegisterScreen
+import com.dpa.sportpro.ui.training.TrainingPlannerScreen
 
 @Composable
 fun SportProNavGraph(
@@ -70,6 +76,109 @@ fun SportProNavGraph(
         }
 
         composable(
+            route = Screen.TrainingPlanner.route,
+            arguments = listOf(
+                navArgument("viewerRole") { type = NavType.StringType },
+                navArgument("viewerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            TrainingPlannerScreen(
+                viewerRole = viewerRole,
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.MonthlyFees.route,
+            arguments = listOf(
+                navArgument("viewerRole") { type = NavType.StringType },
+                navArgument("viewerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            MonthlyFeesScreen(
+                viewerRole = viewerRole,
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.Attendance.route,
+            arguments = listOf(
+                navArgument("viewerRole") { type = NavType.StringType },
+                navArgument("viewerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            AttendanceScreen(
+                viewerRole = viewerRole,
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.Convocations.route,
+            arguments = listOf(
+                navArgument("viewerRole") { type = NavType.StringType },
+                navArgument("viewerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            ConvocationScreen(
+                viewerRole = viewerRole,
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() },
+                onLineupClick = { convocationId ->
+                    navController.navigate(
+                        Screen.TacticalLineup.createRoute(viewerRole.code, convocationId)
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = Screen.TacticalLineup.route,
+            arguments = listOf(
+                navArgument("viewerRole") { type = NavType.StringType },
+                navArgument("convocationId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            TacticalLineupScreen(
+                viewerRole = viewerRole,
+                convocationId = backStackEntry.arguments?.getString("convocationId"),
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.EventCatalog.route,
+            arguments = listOf(navArgument("viewerRole") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val viewerRole = UserRole.fromCode(
+                backStackEntry.arguments?.getString("viewerRole") ?: ""
+            ) ?: UserRole.PLAYER
+            EventCatalogScreen(
+                viewerRole = viewerRole,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
             route = Screen.Home.route,
             arguments = listOf(
                 navArgument("roleCode") { type = NavType.StringType },
@@ -97,6 +206,34 @@ fun SportProNavGraph(
                     navController.navigate(
                         Screen.PlayerProfile.createRoute(userRole.code, userProfile.names)
                     )
+                },
+                onTrainingPlannerClick = {
+                    navController.navigate(
+                        Screen.TrainingPlanner.createRoute(userRole.code, userProfile.names)
+                    )
+                },
+                onMonthlyFeesClick = {
+                    navController.navigate(
+                        Screen.MonthlyFees.createRoute(userRole.code, userProfile.names)
+                    )
+                },
+                onAttendanceClick = {
+                    navController.navigate(
+                        Screen.Attendance.createRoute(userRole.code, userProfile.names)
+                    )
+                },
+                onConvocationsClick = {
+                    navController.navigate(
+                        Screen.Convocations.createRoute(userRole.code, userProfile.names)
+                    )
+                },
+                onTacticalLineupClick = {
+                    navController.navigate(
+                        Screen.TacticalLineup.createRoute(userRole.code, "none")
+                    )
+                },
+                onEventCatalogClick = {
+                    navController.navigate(Screen.EventCatalog.createRoute(userRole.code))
                 },
                 onLogoutClick = {
                     navController.navigate(Screen.Login.route) {

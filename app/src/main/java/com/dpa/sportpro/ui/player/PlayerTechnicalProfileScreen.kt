@@ -68,6 +68,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dpa.sportpro.data.model.PlayerTechnicalProfile
+import com.dpa.sportpro.data.model.PlayerAttendanceRecord
+import com.dpa.sportpro.data.repository.AttendanceRepository
 import com.dpa.sportpro.data.repository.AcademyRepository
 import com.dpa.sportpro.data.repository.PlayerTechnicalProfileRepository
 import com.dpa.sportpro.model.UserRole
@@ -110,6 +112,12 @@ fun PlayerTechnicalProfileScreen(
     val repository = remember(context) {
         PlayerTechnicalProfileRepository(context.applicationContext)
     }
+    val attendanceRepository = remember(context) {
+        AttendanceRepository(context.applicationContext)
+    }
+    val playerAttendance = attendanceRepository.records
+        .filter { it.playerId == "player_mateo" }
+        .sortedByDescending { it.sessionDate }
     val profile = repository.profile
     val isAssignedCoach = viewerRole == UserRole.COACH &&
         academyRepository.academies.any { academy ->
@@ -344,6 +352,7 @@ fun PlayerTechnicalProfileScreen(
                         PrivacyNotice()
                     }
                     PhysicalHistoryCard(profile)
+                    AttendanceHistoryCard(playerAttendance)
                 }
             }
         }
@@ -507,6 +516,29 @@ private fun PhysicalHistoryCard(profile: PlayerTechnicalProfile) {
                     fontSize = 13.sp,
                     modifier = Modifier.padding(start = 10.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AttendanceHistoryCard(records: List<PlayerAttendanceRecord>) {
+    InformationCard(title = "Historial de asistencia") {
+        if (records.isEmpty()) {
+            Text("Aún no hay asistencias registradas.", color = TextMuted, fontSize = 13.sp)
+        } else {
+            records.forEach { record ->
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(
+                        "${formatSessionDate(record.sessionDate)}  •  ${record.status.label}",
+                        color = NeonGreen,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (record.observation.isNotBlank()) {
+                        Text(record.observation, color = TextMuted, fontSize = 13.sp)
+                    }
+                }
             }
         }
     }
@@ -795,4 +827,13 @@ private fun formatBirthDate(date: String): String {
 private fun formatDate(timestamp: Long?): String {
     if (timestamp == null) return "Sin registros"
     return SimpleDateFormat("dd/MM/yyyy", Locale("es", "PE")).format(Date(timestamp))
+}
+
+private fun formatSessionDate(value: String): String {
+    val parsed = try {
+        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
+    } catch (_: ParseException) {
+        null
+    } ?: return value
+    return SimpleDateFormat("dd/MM/yyyy", Locale("es", "PE")).format(parsed)
 }
