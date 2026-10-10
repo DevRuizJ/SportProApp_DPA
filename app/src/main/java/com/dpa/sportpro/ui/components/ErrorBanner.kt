@@ -24,32 +24,28 @@ val ErrorBannerBackground = Color(0xFF2C1217)
 val ErrorBannerBorder = Color(0xFF5C1B24)
 
 @Composable
-fun ErrorBanner(
-    errorMessage: String,
-    modifier: Modifier = Modifier
-) {
+fun ErrorBanner(errorMessage: String, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(ErrorBannerBackground, RoundedCornerShape(12.dp))
-            .border(1.dp, ErrorBannerBorder, RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(ErrorBannerBackground, RoundedCornerShape(12.dp))
+                .border(1.dp, ErrorBannerBorder, RoundedCornerShape(12.dp))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Default.ErrorOutline,
             contentDescription = "Error",
             tint = ErrorRed,
-            modifier = Modifier
-                .size(22.dp)
-                .padding(end = 4.dp)
+            modifier = Modifier.size(22.dp).padding(end = 4.dp),
         )
 
         Text(
             text = errorMessage,
             color = TextWhite.copy(alpha = 0.9f),
             fontSize = 14.sp,
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier.padding(start = 8.dp),
         )
     }
 }

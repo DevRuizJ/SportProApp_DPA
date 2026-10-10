@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.dpa.sportpro.data.model.TrainingExercise
 import com.dpa.sportpro.data.model.TrainingSession
+import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.UUID
 
 class TrainingSessionRepository(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -25,17 +25,19 @@ class TrainingSessionRepository(context: Context) {
         venue: String,
         category: String,
         objective: String,
-        exercises: List<TrainingExercise>
+        exercises: List<TrainingExercise>,
     ) {
-        sessions = sessions + TrainingSession(
-            id = UUID.randomUUID().toString(),
-            date = date,
-            startTime = startTime,
-            venue = venue.trim(),
-            category = category.trim(),
-            objective = objective.trim(),
-            exercises = exercises.toList()
-        )
+        sessions =
+            sessions +
+                TrainingSession(
+                    id = UUID.randomUUID().toString(),
+                    date = date,
+                    startTime = startTime,
+                    venue = venue.trim(),
+                    category = category.trim(),
+                    objective = objective.trim(),
+                    exercises = exercises.toList(),
+                )
         persistSessions()
     }
 
@@ -59,7 +61,7 @@ class TrainingSessionRepository(context: Context) {
                         venue = value.getString("venue"),
                         category = value.getString("category"),
                         objective = value.getString("objective"),
-                        exercises = value.getJSONArray("exercises").toExerciseList()
+                        exercises = value.getJSONArray("exercises").toExerciseList(),
                     )
                 )
             }
@@ -79,7 +81,7 @@ class TrainingSessionRepository(context: Context) {
                     name = exercise.getString("name"),
                     durationMinutes = exercise.getInt("durationMinutes"),
                     intensity = exercise.getString("intensity"),
-                    instructions = exercise.getString("instructions")
+                    instructions = exercise.getString("instructions"),
                 )
             )
         }
@@ -110,30 +112,34 @@ class TrainingSessionRepository(context: Context) {
         preferences.edit().putString(LIBRARY_KEY, array.toString()).apply()
     }
 
-    private fun TrainingExercise.toJson() = JSONObject()
-        .put("name", name)
-        .put("durationMinutes", durationMinutes)
-        .put("intensity", intensity)
-        .put("instructions", instructions)
+    private fun TrainingExercise.toJson() =
+        JSONObject()
+            .put("name", name)
+            .put("durationMinutes", durationMinutes)
+            .put("intensity", intensity)
+            .put("instructions", instructions)
 
     private companion object {
         const val PREFERENCES_NAME = "sportpro_training"
         const val SESSIONS_KEY = "sessions"
         const val LIBRARY_KEY = "exercise_library"
 
-        val demoLibrary = listOf(
-            TrainingExercise(
-                name = "Rondo: Conservación 5v2",
-                durationMinutes = 15,
-                intensity = "Media",
-                instructions = "Rondo básico para incentivar el pase a un toque y la presión coordinada de dos recuperadores."
-            ),
-            TrainingExercise(
-                name = "Transiciones Rápidas y Tiro",
-                durationMinutes = 25,
-                intensity = "Alta",
-                instructions = "Ataque rápido por bandas finalizando con centro al área. Retorno defensivo en bloque bajo."
+        val demoLibrary =
+            listOf(
+                TrainingExercise(
+                    name = "Rondo: Conservación 5v2",
+                    durationMinutes = 15,
+                    intensity = "Media",
+                    instructions =
+                        "Rondo básico para incentivar el pase a un toque y la presión coordinada de dos recuperadores.",
+                ),
+                TrainingExercise(
+                    name = "Transiciones Rápidas y Tiro",
+                    durationMinutes = 25,
+                    intensity = "Alta",
+                    instructions =
+                        "Ataque rápido por bandas finalizando con centro al área. Retorno defensivo en bloque bajo.",
+                ),
             )
-        )
     }
 }

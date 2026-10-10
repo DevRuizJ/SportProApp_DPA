@@ -2,14 +2,14 @@ package com.dpa.sportpro.ui.register
 
 import androidx.lifecycle.ViewModel
 import com.dpa.sportpro.model.UserRole
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class RegisterViewModel : ViewModel() {
 
@@ -22,7 +22,7 @@ class RegisterViewModel : ViewModel() {
                 selectedRole = role,
                 roleError = null,
                 // Clear birth date error if switching to a role that doesn't require it
-                birthDateError = if (!role.requiresBirthDate) null else currentState.birthDateError
+                birthDateError = if (!role.requiresBirthDate) null else currentState.birthDateError,
             )
         }
     }
@@ -58,7 +58,7 @@ class RegisterViewModel : ViewModel() {
                 birthDate = formattedDate,
                 birthDateMillis = timeInMillis,
                 isMinor = isMinor,
-                birthDateError = null
+                birthDateError = null,
             )
         }
     }
@@ -76,49 +76,56 @@ class RegisterViewModel : ViewModel() {
 
         var isValid = true
 
-        val roleError = if (state.selectedRole == null) {
-            isValid = false
-            "Debe seleccionar un rol."
-        } else null
+        val roleError =
+            if (state.selectedRole == null) {
+                isValid = false
+                "Debe seleccionar un rol."
+            } else null
 
-        val namesError = if (state.names.isBlank()) {
-            isValid = false
-            "Ingrese sus nombres."
-        } else null
+        val namesError =
+            if (state.names.isBlank()) {
+                isValid = false
+                "Ingrese sus nombres."
+            } else null
 
-        val lastNamesError = if (state.lastNames.isBlank()) {
-            isValid = false
-            "Ingrese sus apellidos."
-        } else null
+        val lastNamesError =
+            if (state.lastNames.isBlank()) {
+                isValid = false
+                "Ingrese sus apellidos."
+            } else null
 
-        val emailError = if (state.email.isBlank()) {
-            isValid = false
-            "Ingrese un correo electrónico."
-        } else if (!isValidEmail(state.email)) {
-            isValid = false
-            "Ingrese un correo electrónico válido."
-        } else null
+        val emailError =
+            if (state.email.isBlank()) {
+                isValid = false
+                "Ingrese un correo electrónico."
+            } else if (!isValidEmail(state.email)) {
+                isValid = false
+                "Ingrese un correo electrónico válido."
+            } else null
 
-        val birthDateError = if (state.selectedRole?.requiresBirthDate == true && state.birthDate.isBlank()) {
-            isValid = false
-            "Debe seleccionar su fecha de nacimiento."
-        } else null
+        val birthDateError =
+            if (state.selectedRole?.requiresBirthDate == true && state.birthDate.isBlank()) {
+                isValid = false
+                "Debe seleccionar su fecha de nacimiento."
+            } else null
 
-        val passwordError = if (state.password.isBlank()) {
-            isValid = false
-            "Ingrese una contraseña."
-        } else if (!isValidPassword(state.password)) {
-            isValid = false
-            "Mínimo 8 caracteres, al menos una mayúscula y un número."
-        } else null
+        val passwordError =
+            if (state.password.isBlank()) {
+                isValid = false
+                "Ingrese una contraseña."
+            } else if (!isValidPassword(state.password)) {
+                isValid = false
+                "Mínimo 8 caracteres, al menos una mayúscula y un número."
+            } else null
 
-        val confirmPasswordError = if (state.confirmPassword.isBlank()) {
-            isValid = false
-            "Confirme su contraseña."
-        } else if (state.password != state.confirmPassword) {
-            isValid = false
-            "Las contraseñas no coinciden."
-        } else null
+        val confirmPasswordError =
+            if (state.confirmPassword.isBlank()) {
+                isValid = false
+                "Confirme su contraseña."
+            } else if (state.password != state.confirmPassword) {
+                isValid = false
+                "Las contraseñas no coinciden."
+            } else null
 
         _uiState.update {
             it.copy(
@@ -128,24 +135,21 @@ class RegisterViewModel : ViewModel() {
                 emailError = emailError,
                 birthDateError = birthDateError,
                 passwordError = passwordError,
-                confirmPasswordError = confirmPasswordError
+                confirmPasswordError = confirmPasswordError,
             )
         }
 
         if (isValid) {
             val roleInfo = state.selectedRole?.displayName ?: ""
-            val minorDetail = if (state.selectedRole?.requiresBirthDate == true && state.isMinor) {
-                " (Menor de edad - Se habilitará la vinculación con apoderado)"
-            } else ""
+            val minorDetail =
+                if (state.selectedRole?.requiresBirthDate == true && state.isMinor) {
+                    " (Menor de edad - Se habilitará la vinculación con apoderado)"
+                } else ""
 
-            val successMsg = "¡Registro exitoso para $roleInfo! Bienvenido(a), ${state.names}.$minorDetail"
+            val successMsg =
+                "¡Registro exitoso para $roleInfo! Bienvenido(a), ${state.names}.$minorDetail"
 
-            _uiState.update {
-                it.copy(
-                    registrationSuccess = true,
-                    successMessage = successMsg
-                )
-            }
+            _uiState.update { it.copy(registrationSuccess = true, successMessage = successMsg) }
         }
     }
 

@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -55,12 +55,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
 import com.dpa.sportpro.data.model.ConvocationResponse
 import com.dpa.sportpro.data.model.ConvokedPlayer
 import com.dpa.sportpro.data.model.MatchConvocation
@@ -84,45 +84,44 @@ fun ConvocationScreen(
     viewerRole: UserRole,
     viewerName: String,
     onBackClick: () -> Unit,
-    onLineupClick: (String) -> Unit = {}
+    onLineupClick: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val repository = remember(context) { ConvocationRepository.getInstance(context) }
     val rosterRepository = remember(context) { AttendanceRepository(context.applicationContext) }
     val isCoach = viewerRole == UserRole.COACH
-    val visibleConvocations = if (isCoach) {
-        repository.convocations.filter { it.isPublished }
-    } else if (viewerRole == UserRole.PLAYER || viewerRole == UserRole.PARENT) {
-        repository.convocations.filter { convocation ->
-            convocation.isPublished && convocation.players.any { player ->
-                player.linkedAccountNames.any { it.equals(viewerName.trim(), ignoreCase = true) }
+    val visibleConvocations =
+        if (isCoach) {
+            repository.convocations.filter { it.isPublished }
+        } else if (viewerRole == UserRole.PLAYER || viewerRole == UserRole.PARENT) {
+            repository.convocations.filter { convocation ->
+                convocation.isPublished &&
+                    convocation.players.any { player ->
+                        player.linkedAccountNames.any {
+                            it.equals(viewerName.trim(), ignoreCase = true)
+                        }
+                    }
             }
+        } else {
+            emptyList()
         }
-    } else {
-        emptyList()
-    }
     var showCreateDialog by remember { mutableStateOf(false) }
-    var selectedConvocationId by remember(visibleConvocations) {
-        mutableStateOf(visibleConvocations.firstOrNull()?.id)
-    }
+    var selectedConvocationId by
+        remember(visibleConvocations) { mutableStateOf(visibleConvocations.firstOrNull()?.id) }
     var responseReason by remember { mutableStateOf("") }
     var responseMessage by remember { mutableStateOf<String?>(null) }
 
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = TextWhite
+                        tint = TextWhite,
                     )
                 }
                 Text(
@@ -130,7 +129,7 @@ fun ConvocationScreen(
                     modifier = Modifier.padding(start = 6.dp),
                     color = TextWhite,
                     fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
 
@@ -139,27 +138,31 @@ fun ConvocationScreen(
                     "Gestiona citaciones y revisa las respuestas del equipo.",
                     color = TextMuted,
                     fontSize = 14.sp,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 16.dp)
+                    modifier = Modifier.padding(start = 4.dp, bottom = 16.dp),
                 )
                 Button(
                     onClick = { showCreateDialog = true },
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(14.dp),
                 ) {
-                    Text("＋  Crear convocatoria", color = DarkBackground, fontWeight = FontWeight.Bold)
+                    Text(
+                        "＋  Crear convocatoria",
+                        color = DarkBackground,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             } else if (visibleConvocations.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF12332F))
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF12332F)),
                 ) {
                     Text(
                         "Nueva notificación: tienes convocatorias pendientes de respuesta.",
                         color = NeonGreen,
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(14.dp)
+                        modifier = Modifier.padding(14.dp),
                     )
                 }
             }
@@ -168,23 +171,23 @@ fun ConvocationScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = CardBackground)
+                    colors = CardDefaults.cardColors(containerColor = CardBackground),
                 ) {
                     Text(
                         if (isCoach) "Aún no hay convocatorias publicadas."
                         else "No tienes convocatorias vinculadas a esta cuenta.",
                         color = TextMuted,
                         fontSize = 14.sp,
-                        modifier = Modifier.padding(18.dp)
+                        modifier = Modifier.padding(18.dp),
                     )
                 }
             } else {
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(bottom = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier.weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     visibleConvocations.forEach { convocation ->
                         val isSelected = selectedConvocationId == convocation.id
@@ -205,12 +208,12 @@ fun ConvocationScreen(
                                     convocationId = convocation.id,
                                     playerId = playerId,
                                     response = response,
-                                    justification = responseReason
+                                    justification = responseReason,
                                 )
                                 responseMessage = "Tu respuesta quedó registrada."
                             },
                             responseMessage = if (isSelected) responseMessage else null,
-                            onLineupClick = { onLineupClick(convocation.id) }
+                            onLineupClick = { onLineupClick(convocation.id) },
                         )
                     }
                 }
@@ -231,10 +234,10 @@ fun ConvocationScreen(
                     date = date,
                     callTime = time,
                     venue = venue,
-                    players = players
+                    players = players,
                 )
                 showCreateDialog = false
-            }
+            },
         )
     }
 }
@@ -250,42 +253,46 @@ private fun ConvocationCard(
     onReasonChange: (String) -> Unit,
     onRespond: (String, ConvocationResponse) -> Unit,
     responseMessage: String?,
-    onLineupClick: () -> Unit
+    onLineupClick: () -> Unit,
 ) {
     val isCoach = viewerRole == UserRole.COACH
-    val linkedPlayers = convocation.players.filter { player ->
-        player.linkedAccountNames.any { it.equals(viewerName.trim(), ignoreCase = true) }
-    }
+    val linkedPlayers =
+        convocation.players.filter { player ->
+            player.linkedAccountNames.any { it.equals(viewerName.trim(), ignoreCase = true) }
+        }
     val responsePlayer = linkedPlayers.firstOrNull()
-    val statusColor = when (responsePlayer?.response) {
-        ConvocationResponse.CONFIRMED -> NeonGreen
-        ConvocationResponse.UNAVAILABLE -> ErrorRed
-        else -> TextMuted
-    }
+    val statusColor =
+        when (responsePlayer?.response) {
+            ConvocationResponse.CONFIRMED -> NeonGreen
+            ConvocationResponse.UNAVAILABLE -> ErrorRed
+            else -> TextMuted
+        }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (!isCoach) Modifier.clickable(onClick = onToggleExpanded) else Modifier),
+        modifier =
+            Modifier.fillMaxWidth()
+                .then(if (!isCoach) Modifier.clickable(onClick = onToggleExpanded) else Modifier),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .background(
-                            if (convocation.matchType == MatchType.OFFICIAL) Color(0xFF12332F)
-                            else Color(0xFF1A2D4B),
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                    modifier =
+                        Modifier.background(
+                                if (convocation.matchType == MatchType.OFFICIAL) Color(0xFF12332F)
+                                else Color(0xFF1A2D4B),
+                                RoundedCornerShape(8.dp),
+                            )
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         "PARTIDO ${convocation.matchType.label.uppercase(Locale.ROOT)}",
-                        color = if (convocation.matchType == MatchType.OFFICIAL) NeonGreen else TextMuted,
+                        color =
+                            if (convocation.matchType == MatchType.OFFICIAL) NeonGreen
+                            else TextMuted,
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
                 Spacer(Modifier.weight(1f))
@@ -293,13 +300,12 @@ private fun ConvocationCard(
             }
             Row(
                 modifier = Modifier.padding(top = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(DarkBackground, RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier.size(40.dp).background(DarkBackground, RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Default.Shield, contentDescription = null, tint = NeonGreen)
                 }
@@ -308,7 +314,7 @@ private fun ConvocationCard(
                     color = TextWhite,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(start = 12.dp),
                 )
             }
             Spacer(Modifier.height(14.dp))
@@ -316,33 +322,44 @@ private fun ConvocationCard(
             Text(
                 "${formatConvocationDate(convocation.date)}  •  ${convocation.callTime} h",
                 color = TextMuted,
-                modifier = Modifier.padding(top = 12.dp)
+                modifier = Modifier.padding(top = 12.dp),
             )
-            Text(
-                convocation.venue,
-                color = TextMuted,
-                modifier = Modifier.padding(top = 5.dp)
-            )
+            Text(convocation.venue, color = TextMuted, modifier = Modifier.padding(top = 5.dp))
 
             if (isCoach) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                        .background(DarkBackground, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 10.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(top = 16.dp)
+                            .background(DarkBackground, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text("${convocation.confirmedCount} Confirmados", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text("${convocation.pendingCount} Pendientes", color = TextMuted, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text("${convocation.unavailableCount} No disponibles", color = ErrorRed, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(
+                        "${convocation.confirmedCount} Confirmados",
+                        color = NeonGreen,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                    )
+                    Text(
+                        "${convocation.pendingCount} Pendientes",
+                        color = TextMuted,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                    )
+                    Text(
+                        "${convocation.unavailableCount} No disponibles",
+                        color = ErrorRed,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                    )
                 }
                 Text(
                     "JUGADORES CITADOS",
                     color = TextMuted,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
                 )
                 convocation.players.forEach { player ->
                     ConvokedPlayerRow(player)
@@ -352,21 +369,21 @@ private fun ConvocationCard(
                     onClick = onLineupClick,
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     Text("Alineación Táctica", color = DarkBackground, fontWeight = FontWeight.Bold)
                 }
             } else if (responsePlayer != null) {
                 Row(
                     modifier = Modifier.padding(top = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.size(9.dp).background(statusColor, CircleShape))
                     Text(
                         " Tu respuesta: ${responsePlayer.response.label}",
                         color = statusColor,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
                     )
                 }
                 if (responsePlayer.justification.isNotBlank()) {
@@ -374,7 +391,7 @@ private fun ConvocationCard(
                         "Justificación: ${responsePlayer.justification}",
                         color = TextMuted,
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(top = 6.dp)
+                        modifier = Modifier.padding(top = 6.dp),
                     )
                 }
                 if (expanded) {
@@ -384,31 +401,53 @@ private fun ConvocationCard(
                         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                         label = { Text("Justificación (opcional)") },
                         minLines = 2,
-                        colors = convocationFieldColors()
+                        colors = convocationFieldColors(),
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Button(
-                            onClick = { onRespond(responsePlayer.id, ConvocationResponse.CONFIRMED) },
+                            onClick = {
+                                onRespond(responsePlayer.id, ConvocationResponse.CONFIRMED)
+                            },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                         ) {
-                            Text("Confirmo Asistencia", color = DarkBackground, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Confirmo Asistencia",
+                                color = DarkBackground,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
                         Button(
-                            onClick = { onRespond(responsePlayer.id, ConvocationResponse.UNAVAILABLE) },
+                            onClick = {
+                                onRespond(responsePlayer.id, ConvocationResponse.UNAVAILABLE)
+                            },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = ErrorRed.copy(alpha = 0.18f)),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = ErrorRed.copy(alpha = 0.18f)
+                                ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                         ) {
-                            Text("No disponible", color = ErrorRed, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "No disponible",
+                                color = ErrorRed,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
                     }
                     responseMessage?.let {
-                        Text(it, color = NeonGreen, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+                        Text(
+                            it,
+                            color = NeonGreen,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
                     }
                 }
             }
@@ -418,23 +457,29 @@ private fun ConvocationCard(
 
 @Composable
 private fun ConvokedPlayerRow(player: ConvokedPlayer) {
-    val color = when (player.response) {
-        ConvocationResponse.CONFIRMED -> NeonGreen
-        ConvocationResponse.UNAVAILABLE -> ErrorRed
-        ConvocationResponse.PENDING -> TextMuted
-    }
+    val color =
+        when (player.response) {
+            ConvocationResponse.CONFIRMED -> NeonGreen
+            ConvocationResponse.UNAVAILABLE -> ErrorRed
+            ConvocationResponse.PENDING -> TextMuted
+        }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(DarkBackground, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(DarkBackground, RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier.size(36.dp).background(CardBackground, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Default.Person, contentDescription = null, tint = TextMuted, modifier = Modifier.size(21.dp))
+            Icon(
+                Icons.Default.Person,
+                contentDescription = null,
+                tint = TextMuted,
+                modifier = Modifier.size(21.dp),
+            )
         }
         Column(modifier = Modifier.weight(1f).padding(start = 10.dp)) {
             Text(player.name, color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -446,7 +491,7 @@ private fun ConvokedPlayerRow(player: ConvokedPlayer) {
                     fontSize = 11.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 3.dp)
+                    modifier = Modifier.padding(top = 3.dp),
                 )
             }
         }
@@ -455,9 +500,9 @@ private fun ConvokedPlayerRow(player: ConvokedPlayer) {
             color = color,
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
-            modifier = Modifier
-                .background(color.copy(alpha = 0.12f), CircleShape)
-                .padding(horizontal = 10.dp, vertical = 7.dp)
+            modifier =
+                Modifier.background(color.copy(alpha = 0.12f), CircleShape)
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
         )
     }
 }
@@ -466,16 +511,8 @@ private fun ConvokedPlayerRow(player: ConvokedPlayer) {
 private fun CreateConvocationDialog(
     players: List<com.dpa.sportpro.data.model.AttendancePlayer>,
     onDismiss: () -> Unit,
-    onPublish: (
-        String,
-        String,
-        String,
-        MatchType,
-        String,
-        String,
-        String,
-        List<ConvokedPlayer>
-    ) -> Unit
+    onPublish:
+        (String, String, String, MatchType, String, String, String, List<ConvokedPlayer>) -> Unit,
 ) {
     val context = LocalContext.current
     val categories = players.map { it.category }.distinct()
@@ -497,31 +534,40 @@ private fun CreateConvocationDialog(
         title = { Text("Crear convocatoria", color = TextWhite, fontWeight = FontWeight.Bold) },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 620.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 620.dp)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 ConvocationInput(opponent, { opponent = it }, "Rival", "Ej. Academia Cantolao")
-                ConvocationInput(competition, { competition = it }, "Torneo / Competencia", "Ej. Torneo de Clausura")
+                ConvocationInput(
+                    competition,
+                    { competition = it },
+                    "Torneo / Competencia",
+                    "Ej. Torneo de Clausura",
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     MatchType.entries.forEach { option ->
                         val selected = matchType == option
                         Text(
                             option.label,
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(
-                                    if (selected) NeonGreen.copy(alpha = 0.15f) else DarkBackground,
-                                    RoundedCornerShape(10.dp)
-                                )
-                                .border(
-                                    1.dp,
-                                    if (selected) NeonGreen else InputBorder,
-                                    RoundedCornerShape(10.dp)
-                                )
-                                .clickable { matchType = option }
-                                .padding(12.dp),
+                            modifier =
+                                Modifier.weight(1f)
+                                    .background(
+                                        if (selected) NeonGreen.copy(alpha = 0.15f)
+                                        else DarkBackground,
+                                        RoundedCornerShape(10.dp),
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (selected) NeonGreen else InputBorder,
+                                        RoundedCornerShape(10.dp),
+                                    )
+                                    .clickable { matchType = option }
+                                    .padding(12.dp),
                             color = if (selected) NeonGreen else TextMuted,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
@@ -529,51 +575,61 @@ private fun CreateConvocationDialog(
                     PickerButton(
                         label = "Fecha",
                         value = formatConvocationDate(date),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     ) {
                         val calendar = parseConvocationDate(date)
                         DatePickerDialog(
-                            context,
-                            { _, year, month, day ->
-                                date = "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        ).show()
+                                context,
+                                { _, year, month, day ->
+                                    date = "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH),
+                            )
+                            .show()
                     }
                     PickerButton(
                         label = "Citación",
                         value = callTime,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     ) {
                         TimePickerDialog(
-                            context,
-                            { _, hour, minute ->
-                                callTime = "%02d:%02d".format(Locale.US, hour, minute)
-                            },
-                            16,
-                            0,
-                            true
-                        ).show()
+                                context,
+                                { _, hour, minute ->
+                                    callTime = "%02d:%02d".format(Locale.US, hour, minute)
+                                },
+                                16,
+                                0,
+                                true,
+                            )
+                            .show()
                     }
                 }
                 ConvocationInput(venue, { venue = it }, "Lugar del encuentro", "Sede / cancha")
                 Box {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(DarkBackground, RoundedCornerShape(10.dp))
-                            .clickable { categoryMenuExpanded = true }
-                            .padding(13.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .background(DarkBackground, RoundedCornerShape(10.dp))
+                                .clickable { categoryMenuExpanded = true }
+                                .padding(13.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Categoría: $selectedCategory", color = TextWhite, modifier = Modifier.weight(1f))
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextMuted)
+                        Text(
+                            "Categoría: $selectedCategory",
+                            color = TextWhite,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = TextMuted,
+                        )
                     }
                     DropdownMenu(
                         expanded = categoryMenuExpanded,
-                        onDismissRequest = { categoryMenuExpanded = false }
+                        onDismissRequest = { categoryMenuExpanded = false },
                     ) {
                         categories.forEach { category ->
                             DropdownMenuItem(
@@ -581,7 +637,7 @@ private fun CreateConvocationDialog(
                                 onClick = {
                                     selectedCategory = category
                                     categoryMenuExpanded = false
-                                }
+                                },
                             )
                         }
                     }
@@ -589,14 +645,15 @@ private fun CreateConvocationDialog(
                 Text("Selecciona jugadores", color = TextWhite, fontWeight = FontWeight.SemiBold)
                 categoryPlayers.forEach { player ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            selectedPlayers[player.id] = !(selectedPlayers[player.id] ?: true)
-                        },
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier.fillMaxWidth().clickable {
+                                selectedPlayers[player.id] = !(selectedPlayers[player.id] ?: true)
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Checkbox(
                             checked = selectedPlayers[player.id] ?: true,
-                            onCheckedChange = { selectedPlayers[player.id] = it }
+                            onCheckedChange = { selectedPlayers[player.id] = it },
                         )
                         Column {
                             Text(player.name, color = TextWhite, fontSize = 14.sp)
@@ -613,10 +670,10 @@ private fun CreateConvocationDialog(
                     val selected = categoryPlayers.filter { selectedPlayers[it.id] ?: true }
                     if (
                         opponent.isBlank() ||
-                        competition.isBlank() ||
-                        venue.isBlank() ||
-                        selectedCategory.isBlank() ||
-                        selected.isEmpty()
+                            competition.isBlank() ||
+                            venue.isBlank() ||
+                            selectedCategory.isBlank() ||
+                            selected.isEmpty()
                     ) {
                         error = "Completa los datos y selecciona al menos un jugador."
                     } else {
@@ -629,31 +686,35 @@ private fun CreateConvocationDialog(
                             callTime,
                             venue,
                             selected.map { player ->
-                                val (displayName, position, linkedNames) = playerInfo(player.id, player.name)
+                                val (displayName, position, linkedNames) =
+                                    playerInfo(player.id, player.name)
                                 ConvokedPlayer(
                                     id = player.id,
                                     name = displayName,
                                     position = position,
-                                    linkedAccountNames = linkedNames
+                                    linkedAccountNames = linkedNames,
                                 )
-                            }
+                            },
                         )
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
             ) {
                 Icon(Icons.Default.Check, contentDescription = null, tint = DarkBackground)
                 Text(" Publicar convocatoria", color = DarkBackground, fontWeight = FontWeight.Bold)
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextMuted) }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar", color = TextMuted) } },
     )
 }
 
 @Composable
-private fun ConvocationInput(value: String, onValueChange: (String) -> Unit, label: String, placeholder: String) {
+private fun ConvocationInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -661,7 +722,7 @@ private fun ConvocationInput(value: String, onValueChange: (String) -> Unit, lab
         label = { Text(label) },
         placeholder = { Text(placeholder, color = TextMuted) },
         singleLine = true,
-        colors = convocationFieldColors()
+        colors = convocationFieldColors(),
     )
 }
 
@@ -672,34 +733,46 @@ private fun PickerButton(label: String, value: String, modifier: Modifier, onCli
         Text(
             value,
             color = TextWhite,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 5.dp)
-                .background(DarkBackground, RoundedCornerShape(10.dp))
-                .padding(12.dp)
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(top = 5.dp)
+                    .background(DarkBackground, RoundedCornerShape(10.dp))
+                    .padding(12.dp),
         )
     }
 }
 
 @Composable
-private fun convocationFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = TextWhite,
-    unfocusedTextColor = TextWhite,
-    focusedBorderColor = NeonGreen,
-    unfocusedBorderColor = InputBorder,
-    focusedLabelColor = NeonGreen,
-    unfocusedLabelColor = TextMuted,
-    cursorColor = NeonGreen,
-    focusedContainerColor = DarkBackground,
-    unfocusedContainerColor = DarkBackground
-)
+private fun convocationFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextWhite,
+        unfocusedTextColor = TextWhite,
+        focusedBorderColor = NeonGreen,
+        unfocusedBorderColor = InputBorder,
+        focusedLabelColor = NeonGreen,
+        unfocusedLabelColor = TextMuted,
+        cursorColor = NeonGreen,
+        focusedContainerColor = DarkBackground,
+        unfocusedContainerColor = DarkBackground,
+    )
 
-private fun playerInfo(playerId: String, fallbackName: String): Triple<String, String, List<String>> =
+private fun playerInfo(
+    playerId: String,
+    fallbackName: String,
+): Triple<String, String, List<String>> =
     when (playerId) {
-        "player_mateo" -> Triple("Mateo Silva", "Delantero", listOf("Mateo Silva", "Mateo Silva Rossi"))
-        "player_lucas" -> Triple("Lucas Gomez S.", "Defensa", listOf("Lucas Gomez S.", "Lucas Castro"))
-        "player_thiago" -> Triple("Thiago Ruiz Flores", "Mediocampista", listOf("Thiago Ruiz Flores", "Thiago Rossi"))
-        "player_gabriel" -> Triple("Gabriel Mendez O.", "Defensa", listOf("Gabriel Mendez O.", "Gabriel Ruiz"))
+        "player_mateo" ->
+            Triple("Mateo Silva", "Delantero", listOf("Mateo Silva", "Mateo Silva Rossi"))
+        "player_lucas" ->
+            Triple("Lucas Gomez S.", "Defensa", listOf("Lucas Gomez S.", "Lucas Castro"))
+        "player_thiago" ->
+            Triple(
+                "Thiago Ruiz Flores",
+                "Mediocampista",
+                listOf("Thiago Ruiz Flores", "Thiago Rossi"),
+            )
+        "player_gabriel" ->
+            Triple("Gabriel Mendez O.", "Defensa", listOf("Gabriel Mendez O.", "Gabriel Ruiz"))
         else -> Triple(fallbackName, "Jugador", listOf(fallbackName))
     }
 
@@ -708,20 +781,22 @@ private fun todayAsString(): String =
 
 private fun parseConvocationDate(value: String): Calendar {
     val calendar = Calendar.getInstance()
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
-    } catch (_: java.text.ParseException) {
-        null
-    }
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
+        } catch (_: java.text.ParseException) {
+            null
+        }
     if (parsed != null) calendar.time = parsed
     return calendar
 }
 
 private fun formatConvocationDate(value: String): String {
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
-    } catch (_: java.text.ParseException) {
-        null
-    } ?: return value
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
+        } catch (_: java.text.ParseException) {
+            null
+        } ?: return value
     return SimpleDateFormat("EEEE dd 'de' MMMM", Locale("es", "PE")).format(parsed)
 }

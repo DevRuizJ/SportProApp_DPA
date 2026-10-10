@@ -12,7 +12,6 @@ data class RegisterUiState(
     val isMinor: Boolean = false,
     val password: String = "",
     val confirmPassword: String = "",
-
     val roleError: String? = null,
     val namesError: String? = null,
     val lastNamesError: String? = null,
@@ -20,7 +19,6 @@ data class RegisterUiState(
     val birthDateError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
-
     val registrationSuccess: Boolean = false,
-    val successMessage: String? = null
+    val successMessage: String? = null,
 )

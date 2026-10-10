@@ -22,25 +22,21 @@ import com.dpa.sportpro.ui.theme.NeonGreen
 import com.dpa.sportpro.ui.theme.TextWhite
 
 @Composable
-fun BrandHeader(
-    modifier: Modifier = Modifier
-) {
+fun BrandHeader(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
     ) {
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(NeonGreen, RoundedCornerShape(14.dp)),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.size(48.dp).background(NeonGreen, RoundedCornerShape(14.dp)),
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Default.Shield,
                 contentDescription = "SportPro Logo",
                 tint = DarkBackground,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(28.dp),
             )
         }
 
@@ -49,7 +45,7 @@ fun BrandHeader(
             color = TextWhite,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 12.dp)
+            modifier = Modifier.padding(start = 12.dp),
         )
     }
 }

@@ -8,10 +8,10 @@ import com.dpa.sportpro.data.model.ConvocationResponse
 import com.dpa.sportpro.data.model.ConvokedPlayer
 import com.dpa.sportpro.data.model.MatchConvocation
 import com.dpa.sportpro.data.model.MatchType
-import org.json.JSONArray
-import org.json.JSONObject
 import java.util.Calendar
 import java.util.UUID
+import org.json.JSONArray
+import org.json.JSONObject
 
 class ConvocationRepository private constructor(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -27,28 +27,34 @@ class ConvocationRepository private constructor(context: Context) {
         date: String,
         callTime: String,
         venue: String,
-        players: List<ConvokedPlayer>
+        players: List<ConvokedPlayer>,
     ): MatchConvocation {
         require(category.isNotBlank()) { "Selecciona una categoría." }
         require(opponent.isNotBlank()) { "Ingresa el rival." }
-        require(date.isNotBlank() && callTime.isNotBlank()) { "Define la fecha y hora de citación." }
+        require(date.isNotBlank() && callTime.isNotBlank()) {
+            "Define la fecha y hora de citación."
+        }
         require(venue.isNotBlank()) { "Ingresa el lugar del encuentro." }
         require(players.isNotEmpty()) { "Selecciona al menos un jugador." }
-        val convocation = MatchConvocation(
-            id = UUID.randomUUID().toString(),
-            category = category,
-            competition = competition.trim(),
-            opponent = opponent.trim(),
-            matchType = matchType,
-            date = date,
-            callTime = callTime,
-            venue = venue.trim(),
-            players = players.distinctBy { it.id }.map {
-                it.copy(response = ConvocationResponse.PENDING, justification = "")
-            },
-            isPublished = true,
-            publishedAt = System.currentTimeMillis()
-        )
+        val convocation =
+            MatchConvocation(
+                id = UUID.randomUUID().toString(),
+                category = category,
+                competition = competition.trim(),
+                opponent = opponent.trim(),
+                matchType = matchType,
+                date = date,
+                callTime = callTime,
+                venue = venue.trim(),
+                players =
+                    players
+                        .distinctBy { it.id }
+                        .map {
+                            it.copy(response = ConvocationResponse.PENDING, justification = "")
+                        },
+                isPublished = true,
+                publishedAt = System.currentTimeMillis(),
+            )
         convocations = listOf(convocation) + convocations
         persist()
         return convocation
@@ -58,34 +64,40 @@ class ConvocationRepository private constructor(context: Context) {
         convocationId: String,
         playerId: String,
         response: ConvocationResponse,
-        justification: String
+        justification: String,
     ) {
         require(response != ConvocationResponse.PENDING) { "Selecciona una respuesta." }
-        val target = convocations.firstOrNull { it.id == convocationId }
-            ?: error("No se encontró la convocatoria.")
+        val target =
+            convocations.firstOrNull { it.id == convocationId }
+                ?: error("No se encontró la convocatoria.")
         require(target.isPublished) { "La convocatoria todavía no fue publicada." }
-        require(target.players.any { it.id == playerId }) { "El jugador no pertenece a la convocatoria." }
-
-        convocations = convocations.map { convocation ->
-            if (convocation.id != convocationId) return@map convocation
-            convocation.copy(
-                players = convocation.players.map { player ->
-                    if (player.id == playerId) {
-                        player.copy(
-                            response = response,
-                            justification = justification.trim()
-                        )
-                    } else {
-                        player
-                    }
-                }
-            )
+        require(target.players.any { it.id == playerId }) {
+            "El jugador no pertenece a la convocatoria."
         }
+
+        convocations =
+            convocations.map { convocation ->
+                if (convocation.id != convocationId) return@map convocation
+                convocation.copy(
+                    players =
+                        convocation.players.map { player ->
+                            if (player.id == playerId) {
+                                player.copy(
+                                    response = response,
+                                    justification = justification.trim(),
+                                )
+                            } else {
+                                player
+                            }
+                        }
+                )
+            }
         persist()
     }
 
     private fun loadConvocations(): List<MatchConvocation> {
-        val saved = preferences.getString(CONVOCATIONS_KEY, null) ?: return listOf(demoConvocation())
+        val saved =
+            preferences.getString(CONVOCATIONS_KEY, null) ?: return listOf(demoConvocation())
         val array = JSONArray(saved)
         val loaded = buildList {
             for (index in 0 until array.length()) {
@@ -100,13 +112,15 @@ class ConvocationRepository private constructor(context: Context) {
                                 id = player.getString("id"),
                                 name = player.getString("name"),
                                 position = player.getString("position"),
-                                linkedAccountNames = buildList {
-                                    for (accountIndex in 0 until accountArray.length()) {
-                                        add(accountArray.getString(accountIndex))
-                                    }
-                                },
-                                response = ConvocationResponse.valueOf(player.getString("response")),
-                                justification = player.getString("justification")
+                                linkedAccountNames =
+                                    buildList {
+                                        for (accountIndex in 0 until accountArray.length()) {
+                                            add(accountArray.getString(accountIndex))
+                                        }
+                                    },
+                                response =
+                                    ConvocationResponse.valueOf(player.getString("response")),
+                                justification = player.getString("justification"),
                             )
                         )
                     }
@@ -123,19 +137,24 @@ class ConvocationRepository private constructor(context: Context) {
                         venue = value.getString("venue"),
                         players = players,
                         isPublished = value.getBoolean("isPublished"),
-                        publishedAt = if (value.isNull("publishedAt")) null else value.getLong("publishedAt")
+                        publishedAt =
+                            if (value.isNull("publishedAt")) null else value.getLong("publishedAt"),
                     )
                 )
             }
         }
         return loaded.map { convocation ->
-            if (convocation.id != DEMO_CONVOCATION_ID || convocation.confirmedCount >= MIN_DEMO_CONFIRMED) {
+            if (
+                convocation.id != DEMO_CONVOCATION_ID ||
+                    convocation.confirmedCount >= MIN_DEMO_CONFIRMED
+            ) {
                 convocation
             } else {
                 val existingIds = convocation.players.map { it.id }.toSet()
-                val missingPlayers = demoExtraPlayers
-                    .filter { it.id !in existingIds }
-                    .take(MIN_DEMO_CONFIRMED - convocation.confirmedCount)
+                val missingPlayers =
+                    demoExtraPlayers
+                        .filter { it.id !in existingIds }
+                        .take(MIN_DEMO_CONFIRMED - convocation.confirmedCount)
                 convocation.copy(players = convocation.players + missingPlayers)
             }
         }
@@ -187,22 +206,96 @@ class ConvocationRepository private constructor(context: Context) {
             date = "%04d-10-24".format(year),
             callTime = "16:00",
             venue = "Sede Principal: Campo de Marte (Cancha 1)",
-            players = listOf(
-                ConvokedPlayer("player_mateo", "Mateo Silva", "Delantero", listOf("Mateo Silva", "Mateo Silva Rossi"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_thiago", "Thiago Rossi", "Mediocampista", listOf("Thiago Ruiz Flores", "Thiago Rossi"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_lucas", "Lucas Castro", "Defensa", listOf("Lucas Gomez S.", "Lucas Castro"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_benjamin", "Benjamín Díaz", "Portero", listOf("Benjamín Díaz"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_gabriel", "Gabriel Ruiz", "Defensa", listOf("Gabriel Mendez O."), ConvocationResponse.UNAVAILABLE, "Lesión previa."),
-                ConvokedPlayer("player_santiago", "Santiago Paz", "Mediocampista", listOf("Santiago Paz"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_esteban", "Esteban Rojas", "Defensa", listOf("Esteban Rojas"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_diego", "Diego López", "Delantero", listOf("Diego López"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_tomas", "Tomás Ortega", "Mediocampista", listOf("Tomás Ortega"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_raul", "Raúl Paredes", "Defensa", listOf("Raúl Paredes"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_andres", "Andrés Vega", "Mediocampista", listOf("Andrés Vega"), ConvocationResponse.CONFIRMED),
-                ConvokedPlayer("player_carlos", "Carlos Medina", "Delantero", listOf("Carlos Medina"), ConvocationResponse.CONFIRMED)
-            ),
+            players =
+                listOf(
+                    ConvokedPlayer(
+                        "player_mateo",
+                        "Mateo Silva",
+                        "Delantero",
+                        listOf("Mateo Silva", "Mateo Silva Rossi"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_thiago",
+                        "Thiago Rossi",
+                        "Mediocampista",
+                        listOf("Thiago Ruiz Flores", "Thiago Rossi"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_lucas",
+                        "Lucas Castro",
+                        "Defensa",
+                        listOf("Lucas Gomez S.", "Lucas Castro"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_benjamin",
+                        "Benjamín Díaz",
+                        "Portero",
+                        listOf("Benjamín Díaz"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_gabriel",
+                        "Gabriel Ruiz",
+                        "Defensa",
+                        listOf("Gabriel Mendez O."),
+                        ConvocationResponse.UNAVAILABLE,
+                        "Lesión previa.",
+                    ),
+                    ConvokedPlayer(
+                        "player_santiago",
+                        "Santiago Paz",
+                        "Mediocampista",
+                        listOf("Santiago Paz"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_esteban",
+                        "Esteban Rojas",
+                        "Defensa",
+                        listOf("Esteban Rojas"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_diego",
+                        "Diego López",
+                        "Delantero",
+                        listOf("Diego López"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_tomas",
+                        "Tomás Ortega",
+                        "Mediocampista",
+                        listOf("Tomás Ortega"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_raul",
+                        "Raúl Paredes",
+                        "Defensa",
+                        listOf("Raúl Paredes"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_andres",
+                        "Andrés Vega",
+                        "Mediocampista",
+                        listOf("Andrés Vega"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                    ConvokedPlayer(
+                        "player_carlos",
+                        "Carlos Medina",
+                        "Delantero",
+                        listOf("Carlos Medina"),
+                        ConvocationResponse.CONFIRMED,
+                    ),
+                ),
             isPublished = true,
-            publishedAt = System.currentTimeMillis()
+            publishedAt = System.currentTimeMillis(),
         )
     }
 
@@ -211,24 +304,80 @@ class ConvocationRepository private constructor(context: Context) {
         private const val CONVOCATIONS_KEY = "convocations"
         private const val DEMO_CONVOCATION_ID = "demo-convocation-sub15"
         private const val MIN_DEMO_CONFIRMED = 11
-        @Volatile
-        private var instance: ConvocationRepository? = null
+        @Volatile private var instance: ConvocationRepository? = null
 
-        private val demoExtraPlayers = listOf(
-            ConvokedPlayer("player_jorge", "Jorge Salas", "Defensa", listOf("Jorge Salas"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_felipe", "Felipe Arias", "Mediocampista", listOf("Felipe Arias"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_omar", "Omar Campos", "Delantero", listOf("Omar Campos"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_pedro", "Pedro León", "Defensa", listOf("Pedro León"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_miguel", "Miguel Soto", "Mediocampista", listOf("Miguel Soto"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_alonso", "Alonso Cruz", "Delantero", listOf("Alonso Cruz"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_daniel", "Daniel Rivas", "Defensa", listOf("Daniel Rivas"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_pablo", "Pablo Reyes", "Mediocampista", listOf("Pablo Reyes"), ConvocationResponse.CONFIRMED),
-            ConvokedPlayer("player_ivan", "Iván Luna", "Delantero", listOf("Iván Luna"), ConvocationResponse.CONFIRMED)
-        )
+        private val demoExtraPlayers =
+            listOf(
+                ConvokedPlayer(
+                    "player_jorge",
+                    "Jorge Salas",
+                    "Defensa",
+                    listOf("Jorge Salas"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_felipe",
+                    "Felipe Arias",
+                    "Mediocampista",
+                    listOf("Felipe Arias"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_omar",
+                    "Omar Campos",
+                    "Delantero",
+                    listOf("Omar Campos"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_pedro",
+                    "Pedro León",
+                    "Defensa",
+                    listOf("Pedro León"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_miguel",
+                    "Miguel Soto",
+                    "Mediocampista",
+                    listOf("Miguel Soto"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_alonso",
+                    "Alonso Cruz",
+                    "Delantero",
+                    listOf("Alonso Cruz"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_daniel",
+                    "Daniel Rivas",
+                    "Defensa",
+                    listOf("Daniel Rivas"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_pablo",
+                    "Pablo Reyes",
+                    "Mediocampista",
+                    listOf("Pablo Reyes"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+                ConvokedPlayer(
+                    "player_ivan",
+                    "Iván Luna",
+                    "Delantero",
+                    listOf("Iván Luna"),
+                    ConvocationResponse.CONFIRMED,
+                ),
+            )
 
         fun getInstance(context: Context): ConvocationRepository =
-            instance ?: synchronized(this) {
-                instance ?: ConvocationRepository(context.applicationContext).also { instance = it }
-            }
+            instance
+                ?: synchronized(this) {
+                    instance
+                        ?: ConvocationRepository(context.applicationContext).also { instance = it }
+                }
     }
 }

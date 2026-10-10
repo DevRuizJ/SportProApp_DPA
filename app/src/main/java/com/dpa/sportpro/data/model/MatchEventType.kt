@@ -5,10 +5,7 @@ data class MatchEventType(
     val name: String,
     val description: String,
     val requiredFields: List<String>,
-    val optionalFields: List<String>
+    val optionalFields: List<String>,
 )
 
-data class CategoryEventSettings(
-    val category: String,
-    val enabledEventIds: Set<String>
-)
+data class CategoryEventSettings(val category: String, val enabledEventIds: Set<String>)

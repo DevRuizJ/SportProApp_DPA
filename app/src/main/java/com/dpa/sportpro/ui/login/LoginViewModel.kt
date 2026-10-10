@@ -11,31 +11,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    private val authRepository: AuthRepository = AuthRepositoryImpl()
-) : ViewModel() {
+class LoginViewModel(private val authRepository: AuthRepository = AuthRepositoryImpl()) :
+    ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun onEmailChanged(email: String) {
-        _uiState.update {
-            it.copy(
-                email = email,
-                emailError = null,
-                globalError = null
-            )
-        }
+        _uiState.update { it.copy(email = email, emailError = null, globalError = null) }
     }
 
     fun onPasswordChanged(password: String) {
-        _uiState.update {
-            it.copy(
-                password = password,
-                passwordError = null,
-                globalError = null
-            )
-        }
+        _uiState.update { it.copy(password = password, passwordError = null, globalError = null) }
     }
 
     fun login() {
@@ -63,7 +50,7 @@ class LoginViewModel(
                 it.copy(
                     emailError = emailErr,
                     passwordError = passwordErr,
-                    globalError = "Correo electrónico o contraseña incorrectos."
+                    globalError = "Correo electrónico o contraseña incorrectos.",
                 )
             }
             return
@@ -78,17 +65,12 @@ class LoginViewModel(
                         it.copy(
                             isSubmitting = false,
                             authenticatedUser = result.userProfile,
-                            globalError = null
+                            globalError = null,
                         )
                     }
                 }
                 is AuthResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isSubmitting = false,
-                            globalError = result.message
-                        )
-                    }
+                    _uiState.update { it.copy(isSubmitting = false, globalError = result.message) }
                 }
             }
         }

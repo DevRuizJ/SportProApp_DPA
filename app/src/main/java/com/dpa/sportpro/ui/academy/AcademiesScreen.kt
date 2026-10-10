@@ -68,10 +68,7 @@ import com.dpa.sportpro.ui.theme.NeonGreen
 import com.dpa.sportpro.ui.theme.TextMuted
 import com.dpa.sportpro.ui.theme.TextWhite
 
-private data class CategoryDraft(
-    val name: String = "",
-    val coachName: String = ""
-)
+private data class CategoryDraft(val name: String = "", val coachName: String = "")
 
 private val availableCoaches = listOf("Carlos Gómez")
 
@@ -84,22 +81,16 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
 
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 18.dp, bottom = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = TextWhite
+                            tint = TextWhite,
                         )
                     }
                     Text(
@@ -107,16 +98,18 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
                         modifier = Modifier.weight(1f).padding(start = 8.dp),
                         color = TextWhite,
                         fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
-                    IconButton(onClick = {}, modifier = Modifier
-                        .background(CardBackground, RoundedCornerShape(14.dp))
-                        .size(48.dp)
+                    IconButton(
+                        onClick = {},
+                        modifier =
+                            Modifier.background(CardBackground, RoundedCornerShape(14.dp))
+                                .size(48.dp),
                     ) {
                         Icon(
                             Icons.Default.Notifications,
                             contentDescription = "Notificaciones",
-                            tint = TextWhite
+                            tint = TextWhite,
                         )
                     }
                 }
@@ -131,67 +124,62 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
                         Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted)
                     },
                     shape = RoundedCornerShape(16.dp),
-                    colors = academyTextFieldColors()
+                    colors = academyTextFieldColors(),
                 )
 
                 Spacer(modifier = Modifier.height(22.dp))
 
-                val filteredAcademies = repository.academies.filter {
-                    it.name.contains(searchQuery, ignoreCase = true) ||
-                        it.categories.any { category ->
-                            category.name.contains(searchQuery, ignoreCase = true)
-                        }
-                }
+                val filteredAcademies =
+                    repository.academies.filter {
+                        it.name.contains(searchQuery, ignoreCase = true) ||
+                            it.categories.any { category ->
+                                category.name.contains(searchQuery, ignoreCase = true)
+                            }
+                    }
                 if (filteredAcademies.isEmpty()) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 72.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.fillMaxWidth().padding(top = 72.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
                             Icons.Default.Shield,
                             contentDescription = null,
                             tint = TextMuted,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
                             if (searchQuery.isBlank()) "Aún no hay academias registradas"
                             else "No se encontraron academias",
                             color = TextWhite,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
                         )
                         Text(
                             if (searchQuery.isBlank()) "Usa + para registrar la primera."
                             else "Prueba con otro nombre o categoría.",
                             color = TextMuted,
-                            modifier = Modifier.padding(top = 6.dp)
+                            modifier = Modifier.padding(top = 6.dp),
                         )
                     }
                 } else {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(bottom = 96.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                        modifier =
+                            Modifier.fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(bottom = 96.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
-                        filteredAcademies.forEach { academy ->
-                            AcademyCard(academy)
-                        }
+                        filteredAcademies.forEach { academy -> AcademyCard(academy) }
                     }
                 }
             }
 
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 24.dp),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = 24.dp),
                 containerColor = NeonGreen,
                 contentColor = DarkBackground,
-                shape = CircleShape
+                shape = CircleShape,
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Registrar academia")
             }
@@ -204,7 +192,7 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
             onSave = { name, crestUri, venue, description, categories ->
                 repository.addAcademy(name, crestUri, venue, description, categories)
                 showCreateDialog = false
-            }
+            },
         )
     }
 }
@@ -214,22 +202,23 @@ private fun AcademyCard(academy: Academy) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(62.dp)
-                        .background(DarkBackground, RoundedCornerShape(16.dp))
-                        .border(1.dp, InputBorder, RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier.size(62.dp)
+                            .background(DarkBackground, RoundedCornerShape(16.dp))
+                            .border(1.dp, InputBorder, RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Default.Shield,
-                        contentDescription = if (academy.crestUri.isNotBlank()) "Escudo seleccionado" else "Escudo",
+                        contentDescription =
+                            if (academy.crestUri.isNotBlank()) "Escudo seleccionado" else "Escudo",
                         tint = NeonGreen,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(30.dp),
                     )
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 14.dp, end = 8.dp)) {
@@ -237,7 +226,7 @@ private fun AcademyCard(academy: Academy) {
                         academy.name,
                         color = TextWhite,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                     Text(
                         "Sede Principal: ${academy.mainVenue}",
@@ -245,19 +234,19 @@ private fun AcademyCard(academy: Academy) {
                         fontSize = 14.sp,
                         lineHeight = 19.sp,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 Box(
-                    modifier = Modifier
-                        .background(NeonGreen.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                    modifier =
+                        Modifier.background(NeonGreen.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         "${academy.categories.size} Categorías",
                         color = NeonGreen,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -267,7 +256,7 @@ private fun AcademyCard(academy: Academy) {
                     academy.description,
                     color = TextMuted,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 12.dp)
+                    modifier = Modifier.padding(top = 12.dp),
                 )
             }
 
@@ -278,26 +267,26 @@ private fun AcademyCard(academy: Academy) {
                 color = TextMuted,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
             )
             academy.categories.forEach { category ->
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         category.name,
                         color = TextWhite,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.PersonAdd,
                             contentDescription = "Director técnico",
                             tint = TextMuted,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(17.dp),
                         )
                         Text(
                             " DT: ${category.coachName}",
@@ -305,7 +294,7 @@ private fun AcademyCard(academy: Academy) {
                             modifier = Modifier.padding(start = 4.dp),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
                         )
                     }
                 }
@@ -317,7 +306,7 @@ private fun AcademyCard(academy: Academy) {
 @Composable
 private fun CreateAcademyDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, List<AcademyCategory>) -> Unit
+    onSave: (String, String, String, String, List<AcademyCategory>) -> Unit,
 ) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -326,71 +315,64 @@ private fun CreateAcademyDialog(
     var crestUri by remember { mutableStateOf("") }
     var formError by remember { mutableStateOf<String?>(null) }
     val categories = remember { mutableStateListOf(CategoryDraft()) }
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            try {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            } catch (_: SecurityException) {
-                // The selected image remains available for the current session.
+    val imagePicker =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) {
+            uri: Uri? ->
+            if (uri != null) {
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                } catch (_: SecurityException) {
+                    // The selected image remains available for the current session.
+                }
+                crestUri = uri.toString()
+                formError = null
             }
-            crestUri = uri.toString()
-            formError = null
         }
-    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = CardBackground,
-        title = {
-            Text("Registrar academia", color = TextWhite, fontWeight = FontWeight.Bold)
-        },
+        title = { Text("Registrar academia", color = TextWhite, fontWeight = FontWeight.Bold) },
         text = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 600.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 600.dp)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 AcademyInput(name, { name = it }, "Nombre de la academia/club")
                 AcademyInput(venue, { venue = it }, "Sede principal")
-                AcademyInput(
-                    description,
-                    { description = it },
-                    "Descripción",
-                    singleLine = false
-                )
+                AcademyInput(description, { description = it }, "Descripción", singleLine = false)
 
                 OutlinedButtonLike(
                     text = if (crestUri.isBlank()) "Seleccionar escudo" else "Escudo seleccionado",
                     icon = Icons.Default.Image,
-                    onClick = { imagePicker.launch(arrayOf("image/*")) }
+                    onClick = { imagePicker.launch(arrayOf("image/*")) },
                 )
                 Text(
                     "Modo de prueba: la imagen queda vinculada localmente. La carga a Cloud Storage requiere configurar Firebase.",
                     color = TextMuted,
                     fontSize = 12.sp,
-                    lineHeight = 16.sp
+                    lineHeight = 16.sp,
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         "Categorías y directores técnicos",
                         modifier = Modifier.weight(1f),
                         color = TextWhite,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     TextButton(
                         onClick = { categories.add(CategoryDraft()) },
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp),
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, tint = NeonGreen)
                         Text("Agregar", color = NeonGreen)
@@ -402,7 +384,7 @@ private fun CreateAcademyDialog(
                         category = category,
                         canRemove = categories.size > 1,
                         onCategoryChange = { categories[index] = it },
-                        onRemove = { categories.removeAt(index) }
+                        onRemove = { categories.removeAt(index) },
                     )
                 }
 
@@ -414,31 +396,30 @@ private fun CreateAcademyDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val completeCategories = categories.map {
-                        AcademyCategory(it.name.trim(), it.coachName)
-                    }
-                    val hasValidInput = name.isNotBlank() &&
-                        venue.isNotBlank() &&
-                        description.isNotBlank() &&
-                        crestUri.isNotBlank() &&
-                        completeCategories.isNotEmpty() &&
-                        completeCategories.all { it.name.isNotBlank() && it.coachName.isNotBlank() }
+                    val completeCategories =
+                        categories.map { AcademyCategory(it.name.trim(), it.coachName) }
+                    val hasValidInput =
+                        name.isNotBlank() &&
+                            venue.isNotBlank() &&
+                            description.isNotBlank() &&
+                            crestUri.isNotBlank() &&
+                            completeCategories.isNotEmpty() &&
+                            completeCategories.all {
+                                it.name.isNotBlank() && it.coachName.isNotBlank()
+                            }
                     if (hasValidInput) {
                         onSave(name, crestUri, venue, description, completeCategories)
                     } else {
-                        formError = "Completa los datos, selecciona el escudo y asigna un DT a cada categoría."
+                        formError =
+                            "Completa los datos, selecciona el escudo y asigna un DT a cada categoría."
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
             ) {
                 Text("Guardar academia", color = DarkBackground)
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = TextMuted)
-            }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar", color = TextMuted) } },
     )
 }
 
@@ -447,15 +428,15 @@ private fun CategoryInput(
     category: CategoryDraft,
     canRemove: Boolean,
     onCategoryChange: (CategoryDraft) -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(DarkBackground, RoundedCornerShape(12.dp))
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(DarkBackground, RoundedCornerShape(12.dp))
+                .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
@@ -464,19 +445,17 @@ private fun CategoryInput(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 label = { Text("Categoría") },
-                colors = academyTextFieldColors()
+                colors = academyTextFieldColors(),
             )
             if (canRemove) {
-                TextButton(onClick = onRemove) {
-                    Text("Quitar", color = TextMuted)
-                }
+                TextButton(onClick = onRemove) { Text("Quitar", color = TextMuted) }
             }
         }
         Box {
             OutlinedButtonLike(
                 text = category.coachName.ifBlank { "Seleccionar director técnico" },
                 icon = Icons.Default.PersonAdd,
-                onClick = { expanded = true }
+                onClick = { expanded = true },
             )
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 availableCoaches.forEach { coach ->
@@ -485,7 +464,7 @@ private fun CategoryInput(
                         onClick = {
                             onCategoryChange(category.copy(coachName = coach))
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
@@ -498,7 +477,7 @@ private fun AcademyInput(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
@@ -507,7 +486,7 @@ private fun AcademyInput(
         label = { Text(label) },
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 3,
-        colors = academyTextFieldColors()
+        colors = academyTextFieldColors(),
     )
 }
 
@@ -515,15 +494,15 @@ private fun AcademyInput(
 private fun OutlinedButtonLike(
     text: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, InputBorder, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier.fillMaxWidth()
+                .border(1.dp, InputBorder, RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(20.dp))
         Text(
@@ -531,20 +510,21 @@ private fun OutlinedButtonLike(
             color = TextWhite,
             modifier = Modifier.padding(start = 10.dp),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
-private fun academyTextFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = TextWhite,
-    unfocusedTextColor = TextWhite,
-    focusedBorderColor = NeonGreen,
-    unfocusedBorderColor = InputBorder,
-    focusedLabelColor = NeonGreen,
-    unfocusedLabelColor = TextMuted,
-    cursorColor = NeonGreen,
-    focusedContainerColor = CardBackground,
-    unfocusedContainerColor = CardBackground
-)
+private fun academyTextFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextWhite,
+        unfocusedTextColor = TextWhite,
+        focusedBorderColor = NeonGreen,
+        unfocusedBorderColor = InputBorder,
+        focusedLabelColor = NeonGreen,
+        unfocusedLabelColor = TextMuted,
+        cursorColor = NeonGreen,
+        focusedContainerColor = CardBackground,
+        unfocusedContainerColor = CardBackground,
+    )

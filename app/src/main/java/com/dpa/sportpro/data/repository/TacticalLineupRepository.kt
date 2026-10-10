@@ -25,12 +25,13 @@ class TacticalLineupRepository private constructor(context: Context) {
         formation: String,
         startersBySlot: Map<String, String>,
         captainPlayerId: String,
-        status: LineupStatus
+        status: LineupStatus,
     ) {
-        val confirmedPlayers = convocation.players
-            .filter { it.response == ConvocationResponse.CONFIRMED }
-            .map { it.id }
-            .toSet()
+        val confirmedPlayers =
+            convocation.players
+                .filter { it.response == ConvocationResponse.CONFIRMED }
+                .map { it.id }
+                .toSet()
         require(startersBySlot.values.all { it in confirmedPlayers }) {
             "Solo se pueden alinear jugadores convocados que confirmaron asistencia."
         }
@@ -50,14 +51,15 @@ class TacticalLineupRepository private constructor(context: Context) {
                 "Selecciona al capitán antes de publicar la alineación."
             }
         }
-        val lineup = TacticalLineup(
-            convocationId = convocation.id,
-            formation = formation,
-            startersBySlot = startersBySlot.toMap(),
-            captainPlayerId = captainPlayerId,
-            status = status,
-            updatedAt = System.currentTimeMillis()
-        )
+        val lineup =
+            TacticalLineup(
+                convocationId = convocation.id,
+                formation = formation,
+                startersBySlot = startersBySlot.toMap(),
+                captainPlayerId = captainPlayerId,
+                status = status,
+                updatedAt = System.currentTimeMillis(),
+            )
         lineups = lineups.filterNot { it.convocationId == convocation.id } + lineup
         persist()
     }
@@ -83,7 +85,7 @@ class TacticalLineupRepository private constructor(context: Context) {
                         startersBySlot = assignments,
                         captainPlayerId = value.getString("captainPlayerId"),
                         status = LineupStatus.valueOf(value.getString("status")),
-                        updatedAt = value.getLong("updatedAt")
+                        updatedAt = value.getLong("updatedAt"),
                     )
                 )
             }
@@ -113,14 +115,15 @@ class TacticalLineupRepository private constructor(context: Context) {
         private const val LINEUPS_KEY = "lineups"
         private const val STARTER_COUNT = 11
 
-        @Volatile
-        private var instance: TacticalLineupRepository? = null
+        @Volatile private var instance: TacticalLineupRepository? = null
 
         fun getInstance(context: Context): TacticalLineupRepository =
-            instance ?: synchronized(this) {
-                instance ?: TacticalLineupRepository(context.applicationContext).also {
-                    instance = it
+            instance
+                ?: synchronized(this) {
+                    instance
+                        ?: TacticalLineupRepository(context.applicationContext).also {
+                            instance = it
+                        }
                 }
-            }
     }
 }

@@ -15,11 +15,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -36,7 +33,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,7 +41,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -58,19 +53,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dpa.sportpro.data.model.PlayerTechnicalProfile
 import com.dpa.sportpro.data.model.PlayerAttendanceRecord
-import com.dpa.sportpro.data.repository.AttendanceRepository
+import com.dpa.sportpro.data.model.PlayerTechnicalProfile
 import com.dpa.sportpro.data.repository.AcademyRepository
+import com.dpa.sportpro.data.repository.AttendanceRepository
 import com.dpa.sportpro.data.repository.PlayerTechnicalProfileRepository
 import com.dpa.sportpro.model.UserRole
 import com.dpa.sportpro.ui.theme.CardBackground
@@ -82,20 +77,14 @@ import com.dpa.sportpro.ui.theme.TextMuted
 import com.dpa.sportpro.ui.theme.TextWhite
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.text.ParseException
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private val positions = listOf(
-    "Arquero",
-    "Defensa central",
-    "Lateral",
-    "Mediocampista",
-    "Extremo",
-    "Delantero"
-)
+private val positions =
+    listOf("Arquero", "Defensa central", "Lateral", "Mediocampista", "Extremo", "Delantero")
 private val dominantFeet = listOf("Derecha (Diestro)", "Izquierda (Zurdo)", "Ambas (Ambidiestro)")
 private val emergencyRelationships = listOf("Madre", "Padre", "Tutor", "Otro")
 
@@ -103,29 +92,27 @@ private val emergencyRelationships = listOf("Madre", "Padre", "Tutor", "Otro")
 fun PlayerTechnicalProfileScreen(
     viewerRole: UserRole,
     viewerName: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val context = LocalContext.current
-    val academyRepository = remember(context) {
-        AcademyRepository(context.applicationContext)
-    }
-    val repository = remember(context) {
-        PlayerTechnicalProfileRepository(context.applicationContext)
-    }
-    val attendanceRepository = remember(context) {
-        AttendanceRepository(context.applicationContext)
-    }
-    val playerAttendance = attendanceRepository.records
-        .filter { it.playerId == "player_mateo" }
-        .sortedByDescending { it.sessionDate }
+    val academyRepository = remember(context) { AcademyRepository(context.applicationContext) }
+    val repository =
+        remember(context) { PlayerTechnicalProfileRepository(context.applicationContext) }
+    val attendanceRepository =
+        remember(context) { AttendanceRepository(context.applicationContext) }
+    val playerAttendance =
+        attendanceRepository.records
+            .filter { it.playerId == "player_mateo" }
+            .sortedByDescending { it.sessionDate }
     val profile = repository.profile
-    val isAssignedCoach = viewerRole == UserRole.COACH &&
-        academyRepository.academies.any { academy ->
-            academy.categories.any { category ->
-                category.name.equals(profile.category, ignoreCase = true) &&
-                    category.coachName.equals(viewerName.trim(), ignoreCase = true)
+    val isAssignedCoach =
+        viewerRole == UserRole.COACH &&
+            academyRepository.academies.any { academy ->
+                academy.categories.any { category ->
+                    category.name.equals(profile.category, ignoreCase = true) &&
+                        category.coachName.equals(viewerName.trim(), ignoreCase = true)
+                }
             }
-        }
     val canViewPrivateData = viewerRole == UserRole.ADMIN || isAssignedCoach
     val canManageProfile = viewerRole == UserRole.ADMIN || isAssignedCoach
 
@@ -145,40 +132,42 @@ fun PlayerTechnicalProfileScreen(
     var formError by remember { mutableStateOf<String?>(null) }
     var photoError by remember { mutableStateOf<String?>(null) }
 
-    val galleryPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            try {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            } catch (_: SecurityException) {
-                photoError = "No se pudo conservar el acceso a la foto. Selecciónala de nuevo antes de guardar."
-            }
-            if (photoError == null) {
-                photoUri = uri.toString()
-                photoError = null
-            }
-        }
-    }
-    val cameraPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        if (bitmap != null) {
-            try {
-                val photoFile = File(context.filesDir, "player_profile_photo.jpg")
-                photoFile.outputStream().use { output ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+    val galleryPicker =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) {
+            uri: Uri? ->
+            if (uri != null) {
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                } catch (_: SecurityException) {
+                    photoError =
+                        "No se pudo conservar el acceso a la foto. Selecciónala de nuevo antes de guardar."
                 }
-                photoUri = Uri.fromFile(photoFile).toString()
-                photoError = null
-            } catch (_: IOException) {
-                photoError = "No se pudo guardar la foto tomada. Inténtalo nuevamente."
+                if (photoError == null) {
+                    photoUri = uri.toString()
+                    photoError = null
+                }
             }
         }
-    }
+    val cameraPicker =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.TakePicturePreview()
+        ) { bitmap: Bitmap? ->
+            if (bitmap != null) {
+                try {
+                    val photoFile = File(context.filesDir, "player_profile_photo.jpg")
+                    photoFile.outputStream().use { output ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+                    }
+                    photoUri = Uri.fromFile(photoFile).toString()
+                    photoError = null
+                } catch (_: IOException) {
+                    photoError = "No se pudo guardar la foto tomada. Inténtalo nuevamente."
+                }
+            }
+        }
 
     fun cancelEditing() {
         fullName = profile.fullName
@@ -201,16 +190,14 @@ fun PlayerTechnicalProfileScreen(
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = if (editing) ::cancelEditing else onBackClick) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = TextWhite
+                        tint = TextWhite,
                     )
                 }
                 Text(
@@ -218,7 +205,7 @@ fun PlayerTechnicalProfileScreen(
                     modifier = Modifier.weight(1f).padding(start = 6.dp),
                     color = TextWhite,
                     fontSize = 23.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 if (!editing && canManageProfile) {
                     TextButton(onClick = { editing = true }) {
@@ -229,18 +216,18 @@ fun PlayerTechnicalProfileScreen(
             }
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 28.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                modifier =
+                    Modifier.weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 PlayerIdentityCard(
                     name = if (editing) fullName else profile.fullName,
                     category = profile.category,
                     primaryPosition = if (editing) primaryPosition else profile.primaryPosition,
-                    photoUri = if (editing) photoUri else profile.profilePhotoUri
+                    photoUri = if (editing) photoUri else profile.profilePhotoUri,
                 )
 
                 if (editing) {
@@ -269,19 +256,17 @@ fun PlayerTechnicalProfileScreen(
                         onEmergencyPhoneChange = { emergencyPhone = it },
                         onChooseGallery = { galleryPicker.launch(arrayOf("image/*")) },
                         onTakePhoto = { cameraPicker.launch(null) },
-                        photoError = photoError
+                        photoError = photoError,
                     )
-                    formError?.let {
-                        Text(it, color = ErrorRed, fontSize = 13.sp)
-                    }
+                    formError?.let { Text(it, color = ErrorRed, fontSize = 13.sp) }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         TextButton(
                             onClick = ::cancelEditing,
                             modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(vertical = 14.dp)
+                            contentPadding = PaddingValues(vertical = 14.dp),
                         ) {
                             Text("Cancelar", color = TextMuted)
                         }
@@ -291,19 +276,22 @@ fun PlayerTechnicalProfileScreen(
                                 val weight = weightText.toDoubleOrNull()
                                 if (
                                     fullName.isBlank() ||
-                                    dateOfBirth.isBlank() ||
-                                    primaryPosition.isBlank() ||
-                                    secondaryPosition.isBlank() ||
-                                    dominantFoot.isBlank() ||
-                                    height == null || height <= 0.0 ||
-                                    weight == null || weight <= 0.0 ||
-                                    photoUri.isBlank() ||
-                                    contactPhone.isBlank() ||
-                                    emergencyName.isBlank() ||
-                                    emergencyRelationship.isBlank() ||
-                                    emergencyPhone.isBlank()
+                                        dateOfBirth.isBlank() ||
+                                        primaryPosition.isBlank() ||
+                                        secondaryPosition.isBlank() ||
+                                        dominantFoot.isBlank() ||
+                                        height == null ||
+                                        height <= 0.0 ||
+                                        weight == null ||
+                                        weight <= 0.0 ||
+                                        photoUri.isBlank() ||
+                                        contactPhone.isBlank() ||
+                                        emergencyName.isBlank() ||
+                                        emergencyRelationship.isBlank() ||
+                                        emergencyPhone.isBlank()
                                 ) {
-                                    formError = "Completa los campos, agrega una foto y revisa los datos físicos."
+                                    formError =
+                                        "Completa los campos, agrega una foto y revisa los datos físicos."
                                 } else {
                                     repository.updateProfile(
                                         profile.copy(
@@ -318,7 +306,7 @@ fun PlayerTechnicalProfileScreen(
                                             contactPhone = contactPhone.trim(),
                                             emergencyContactName = emergencyName.trim(),
                                             emergencyRelationship = emergencyRelationship,
-                                            emergencyPhone = emergencyPhone.trim()
+                                            emergencyPhone = emergencyPhone.trim(),
                                         )
                                     )
                                     formError = null
@@ -327,9 +315,13 @@ fun PlayerTechnicalProfileScreen(
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
-                            contentPadding = PaddingValues(vertical = 14.dp)
+                            contentPadding = PaddingValues(vertical = 14.dp),
                         ) {
-                            Text("Guardar ficha", color = DarkBackground, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Guardar ficha",
+                                color = DarkBackground,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
                     }
                 } else {
@@ -364,17 +356,14 @@ private fun PlayerIdentityCard(
     name: String,
     category: String,
     primaryPosition: String,
-    photoUri: String
+    photoUri: String,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
-        Row(
-            modifier = Modifier.padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             ProfileAvatar(photoUri = photoUri, size = 76)
             Column(modifier = Modifier.padding(start = 16.dp)) {
                 Text(name, color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -382,7 +371,7 @@ private fun PlayerIdentityCard(
                     "$primaryPosition  •  Categoría $category",
                     color = NeonGreen,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 5.dp)
+                    modifier = Modifier.padding(top = 5.dp),
                 )
             }
         }
@@ -395,7 +384,7 @@ private fun PhysicalSummary(profile: PlayerTechnicalProfile) {
         Card(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground)
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text("Estatura", color = TextMuted, fontSize = 13.sp)
@@ -404,15 +393,19 @@ private fun PhysicalSummary(profile: PlayerTechnicalProfile) {
                     color = TextWhite,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 6.dp)
+                    modifier = Modifier.padding(top = 6.dp),
                 )
-                Text("Historial: ${profile.physicalHistory.size} registro(s)", color = NeonGreen, fontSize = 11.sp)
+                Text(
+                    "Historial: ${profile.physicalHistory.size} registro(s)",
+                    color = NeonGreen,
+                    fontSize = 11.sp,
+                )
             }
         }
         Card(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground)
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text("Peso", color = TextMuted, fontSize = 13.sp)
@@ -421,12 +414,12 @@ private fun PhysicalSummary(profile: PlayerTechnicalProfile) {
                     color = TextWhite,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 6.dp)
+                    modifier = Modifier.padding(top = 6.dp),
                 )
                 Text(
                     "Act: ${formatDate(profile.physicalHistory.lastOrNull()?.recordedAt)}",
                     color = TextMuted,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
                 )
             }
         }
@@ -438,11 +431,11 @@ private fun InformationCard(title: String, content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(title, color = TextWhite, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             content()
@@ -455,7 +448,7 @@ private fun InformationRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = TextMuted, fontSize = 14.sp, modifier = Modifier.weight(1f))
         Text(
@@ -464,7 +457,7 @@ private fun InformationRow(label: String, value: String) {
             fontSize = 14.sp,
             modifier = Modifier.padding(start = 12.dp),
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -474,19 +467,16 @@ private fun PrivacyNotice() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Lock, contentDescription = null, tint = NeonGreen)
             Text(
                 "Por privacidad, los datos de contacto y emergencia solo son visibles para el DT de la categoría y el Administrador.",
                 color = TextMuted,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
-                modifier = Modifier.padding(start = 12.dp)
+                modifier = Modifier.padding(start = 12.dp),
             )
         }
     }
@@ -495,29 +485,32 @@ private fun PrivacyNotice() {
 @Composable
 private fun PhysicalHistoryCard(profile: PlayerTechnicalProfile) {
     InformationCard(title = "Historial físico") {
-        profile.physicalHistory.sortedByDescending { it.recordedAt }.forEach { measurement ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.History,
-                    contentDescription = null,
-                    tint = NeonGreen,
-                    modifier = Modifier.size(19.dp)
-                )
-                Text(
-                    "${formatDate(measurement.recordedAt)}  •  %.2f m  •  %.1f kg".format(
-                        Locale.US,
-                        measurement.heightMeters,
-                        measurement.weightKilograms
-                    ),
-                    color = TextMuted,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(start = 10.dp)
-                )
+        profile.physicalHistory
+            .sortedByDescending { it.recordedAt }
+            .forEach { measurement ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        tint = NeonGreen,
+                        modifier = Modifier.size(19.dp),
+                    )
+                    Text(
+                        "${formatDate(measurement.recordedAt)}  •  %.2f m  •  %.1f kg"
+                            .format(
+                                Locale.US,
+                                measurement.heightMeters,
+                                measurement.weightKilograms,
+                            ),
+                        color = TextMuted,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(start = 10.dp),
+                    )
+                }
             }
-        }
     }
 }
 
@@ -533,7 +526,7 @@ private fun AttendanceHistoryCard(records: List<PlayerAttendanceRecord>) {
                         "${formatSessionDate(record.sessionDate)}  •  ${record.status.label}",
                         color = NeonGreen,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     if (record.observation.isNotBlank()) {
                         Text(record.observation, color = TextMuted, fontSize = 13.sp)
@@ -570,7 +563,7 @@ private fun ProfileEditor(
     onEmergencyPhoneChange: (String) -> Unit,
     onChooseGallery: () -> Unit,
     onTakePhoto: () -> Unit,
-    photoError: String?
+    photoError: String?,
 ) {
     val context = LocalContext.current
     InformationCard(title = "Datos del jugador") {
@@ -579,25 +572,23 @@ private fun ProfileEditor(
             onClick = {
                 val calendar = parseBirthDate(dateOfBirth)
                 DatePickerDialog(
-                    context,
-                    { _, year, month, day ->
-                        onDateOfBirthChange(
-                            "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
-                        )
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-                ).show()
+                        context,
+                        { _, year, month, day ->
+                            onDateOfBirthChange(
+                                "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
+                            )
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH),
+                    )
+                    .show()
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = DarkBackground)
+            colors = ButtonDefaults.buttonColors(containerColor = DarkBackground),
         ) {
             Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = NeonGreen)
-            Text(
-                "  Fecha de nacimiento: ${formatBirthDate(dateOfBirth)}",
-                color = TextWhite
-            )
+            Text("  Fecha de nacimiento: ${formatBirthDate(dateOfBirth)}", color = TextWhite)
         }
         SelectInput("Posición principal", primaryPosition, positions, onPrimaryPositionChange)
         SelectInput("Posición secundaria", secondaryPosition, positions, onSecondaryPositionChange)
@@ -609,14 +600,9 @@ private fun ProfileEditor(
             heightText,
             onHeightChange,
             "Estatura (m)",
-            keyboardType = KeyboardType.Decimal
+            keyboardType = KeyboardType.Decimal,
         )
-        ProfileInput(
-            weightText,
-            onWeightChange,
-            "Peso (kg)",
-            keyboardType = KeyboardType.Decimal
-        )
+        ProfileInput(weightText, onWeightChange, "Peso (kg)", keyboardType = KeyboardType.Decimal)
     }
 
     InformationCard(title = "Foto de perfil") {
@@ -625,13 +611,13 @@ private fun ProfileEditor(
                 text = "Cámara",
                 icon = Icons.Default.CameraAlt,
                 modifier = Modifier.weight(1f),
-                onClick = onTakePhoto
+                onClick = onTakePhoto,
             )
             ActionButton(
                 text = "Galería",
                 icon = Icons.Default.AddAPhoto,
                 modifier = Modifier.weight(1f),
-                onClick = onChooseGallery
+                onClick = onChooseGallery,
             )
         }
         photoError?.let { Text(it, color = ErrorRed, fontSize = 12.sp) }
@@ -642,7 +628,7 @@ private fun ProfileEditor(
             contactPhone,
             onContactPhoneChange,
             "Teléfono de contacto",
-            keyboardType = KeyboardType.Phone
+            keyboardType = KeyboardType.Phone,
         )
     }
 
@@ -652,13 +638,13 @@ private fun ProfileEditor(
             "Parentesco",
             emergencyRelationship,
             emergencyRelationships,
-            onEmergencyRelationshipChange
+            onEmergencyRelationshipChange,
         )
         ProfileInput(
             emergencyPhone,
             onEmergencyPhoneChange,
             "Teléfono de emergencia *",
-            keyboardType = KeyboardType.Phone
+            keyboardType = KeyboardType.Phone,
         )
     }
 }
@@ -668,7 +654,7 @@ private fun ProfileInput(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     OutlinedTextField(
         value = value,
@@ -677,7 +663,7 @@ private fun ProfileInput(
         label = { Text(label) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = profileFieldColors()
+        colors = profileFieldColors(),
     )
 }
 
@@ -686,7 +672,7 @@ private fun SelectInput(
     label: String,
     selected: String,
     options: List<String>,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
@@ -697,13 +683,9 @@ private fun SelectInput(
             label = { Text(label) },
             readOnly = true,
             singleLine = true,
-            colors = profileFieldColors()
+            colors = profileFieldColors(),
         )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable { expanded = true }
-        )
+        Box(modifier = Modifier.matchParentSize().clickable { expanded = true })
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
@@ -711,7 +693,7 @@ private fun SelectInput(
                     onClick = {
                         onSelect(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -723,13 +705,13 @@ private fun ActionButton(
     text: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = DarkBackground)
+        colors = ButtonDefaults.buttonColors(containerColor = DarkBackground),
     ) {
         Icon(icon, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(18.dp))
         Text(" $text", color = TextWhite, maxLines = 1)
@@ -740,27 +722,25 @@ private fun ActionButton(
 private fun ProfileAvatar(photoUri: String, size: Int) {
     val bitmap = loadProfileBitmap(photoUri)
     Box(
-        modifier = Modifier
-            .size(size.dp)
-            .background(DarkBackground, CircleShape)
-            .border(1.5.dp, NeonGreen, CircleShape),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier.size(size.dp)
+                .background(DarkBackground, CircleShape)
+                .border(1.5.dp, NeonGreen, CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Foto de perfil del jugador",
-                modifier = Modifier
-                    .size(size.dp)
-                    .clip(CircleShape),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                modifier = Modifier.size(size.dp).clip(CircleShape),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             )
         } else {
             Icon(
                 Icons.Default.Person,
                 contentDescription = "Foto de perfil no seleccionada",
                 tint = NeonGreen,
-                modifier = Modifier.size((size / 2).dp)
+                modifier = Modifier.size((size / 2).dp),
             )
         }
     }
@@ -777,9 +757,10 @@ private fun loadProfileBitmap(photoUri: String): Bitmap? {
             try {
                 when (uri.scheme) {
                     "file" -> BitmapFactory.decodeFile(uri.path)
-                    "content" -> context.contentResolver.openInputStream(uri)?.use {
-                        BitmapFactory.decodeStream(it)
-                    }
+                    "content" ->
+                        context.contentResolver.openInputStream(uri)?.use {
+                            BitmapFactory.decodeStream(it)
+                        }
                     else -> null
                 }
             } catch (_: IOException) {
@@ -792,35 +773,38 @@ private fun loadProfileBitmap(photoUri: String): Bitmap? {
 }
 
 @Composable
-private fun profileFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = TextWhite,
-    unfocusedTextColor = TextWhite,
-    focusedBorderColor = NeonGreen,
-    unfocusedBorderColor = InputBorder,
-    focusedLabelColor = NeonGreen,
-    unfocusedLabelColor = TextMuted,
-    cursorColor = NeonGreen,
-    focusedContainerColor = CardBackground,
-    unfocusedContainerColor = CardBackground
-)
+private fun profileFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextWhite,
+        unfocusedTextColor = TextWhite,
+        focusedBorderColor = NeonGreen,
+        unfocusedBorderColor = InputBorder,
+        focusedLabelColor = NeonGreen,
+        unfocusedLabelColor = TextMuted,
+        cursorColor = NeonGreen,
+        focusedContainerColor = CardBackground,
+        unfocusedContainerColor = CardBackground,
+    )
 
 private fun parseBirthDate(date: String): Calendar {
     val calendar = Calendar.getInstance()
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
-    } catch (_: ParseException) {
-        null
-    }
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
+        } catch (_: ParseException) {
+            null
+        }
     if (parsed != null) calendar.time = parsed
     return calendar
 }
 
 private fun formatBirthDate(date: String): String {
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
-    } catch (_: ParseException) {
-        null
-    } ?: return date
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
+        } catch (_: ParseException) {
+            null
+        } ?: return date
     return SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "PE")).format(parsed)
 }
 
@@ -830,10 +814,11 @@ private fun formatDate(timestamp: Long?): String {
 }
 
 private fun formatSessionDate(value: String): String {
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
-    } catch (_: ParseException) {
-        null
-    } ?: return value
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
+        } catch (_: ParseException) {
+            null
+        } ?: return value
     return SimpleDateFormat("dd/MM/yyyy", Locale("es", "PE")).format(parsed)
 }

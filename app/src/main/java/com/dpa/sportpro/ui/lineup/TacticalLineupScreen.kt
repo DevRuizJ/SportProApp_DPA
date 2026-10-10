@@ -26,8 +26,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,12 +53,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
 import com.dpa.sportpro.data.model.ConvocationResponse
 import com.dpa.sportpro.data.model.ConvokedPlayer
 import com.dpa.sportpro.data.model.LineupStatus
@@ -83,56 +83,59 @@ private data class FieldSlot(
     val number: Int,
     val line: Int,
     val x: Float,
-    val y: Float
+    val y: Float,
 )
 
 @Composable
-fun TacticalLineupScreen(
-    viewerRole: UserRole,
-    convocationId: String?,
-    onBackClick: () -> Unit
-) {
+fun TacticalLineupScreen(viewerRole: UserRole, convocationId: String?, onBackClick: () -> Unit) {
     val context = LocalContext.current
     val convocationRepository = remember(context) { ConvocationRepository.getInstance(context) }
     val lineupRepository = remember(context) { TacticalLineupRepository.getInstance(context) }
     val publishedConvocations = convocationRepository.convocations.filter { it.isPublished }
-    var selectedConvocationId by remember(publishedConvocations, convocationId) {
-        mutableStateOf(
-            convocationId?.takeIf { id -> publishedConvocations.any { it.id == id } }
-                ?: publishedConvocations.firstOrNull()?.id
-        )
-    }
+    var selectedConvocationId by
+        remember(publishedConvocations, convocationId) {
+            mutableStateOf(
+                convocationId?.takeIf { id -> publishedConvocations.any { it.id == id } }
+                    ?: publishedConvocations.firstOrNull()?.id
+            )
+        }
     val convocation = publishedConvocations.firstOrNull { it.id == selectedConvocationId }
     val savedLineup = convocation?.let { lineupRepository.lineupFor(it.id) }
-    val availablePlayers = convocation?.players
-        ?.filter { it.response == ConvocationResponse.CONFIRMED }
-        .orEmpty()
+    val availablePlayers =
+        convocation?.players?.filter { it.response == ConvocationResponse.CONFIRMED }.orEmpty()
 
-    var formation by remember(selectedConvocationId, savedLineup) {
-        mutableStateOf(savedLineup?.formation ?: "4-3-3")
-    }
-    var customFormation by remember(selectedConvocationId, savedLineup) {
-        mutableStateOf(savedLineup?.formation?.takeIf { it !in presetFormations } ?: "")
-    }
+    var formation by
+        remember(selectedConvocationId, savedLineup) {
+            mutableStateOf(savedLineup?.formation ?: "4-3-3")
+        }
+    var customFormation by
+        remember(selectedConvocationId, savedLineup) {
+            mutableStateOf(savedLineup?.formation?.takeIf { it !in presetFormations } ?: "")
+        }
     var customFormationInput by remember { mutableStateOf("") }
     var showCustomFormationDialog by remember { mutableStateOf(false) }
     var formationError by remember { mutableStateOf<String?>(null) }
     var showConvocationPicker by remember { mutableStateOf(false) }
-    val assigned = remember(selectedConvocationId, savedLineup) {
-        mutableStateMapOf<String, String>().apply {
-            putAll(savedLineup?.startersBySlot.orEmpty())
+    val assigned =
+        remember(selectedConvocationId, savedLineup) {
+            mutableStateMapOf<String, String>().apply {
+                putAll(savedLineup?.startersBySlot.orEmpty())
+            }
         }
-    }
-    var captainId by remember(selectedConvocationId, savedLineup) {
-        mutableStateOf(savedLineup?.captainPlayerId.orEmpty())
-    }
+    var captainId by
+        remember(selectedConvocationId, savedLineup) {
+            mutableStateOf(savedLineup?.captainPlayerId.orEmpty())
+        }
     var feedback by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val slots = remember(formation) { formationSlots(formation) }
-    val starters = slots.mapNotNull { slot ->
-        assigned[slot.key]?.let { playerId -> availablePlayers.firstOrNull { it.id == playerId } }
-    }
+    val starters =
+        slots.mapNotNull { slot ->
+            assigned[slot.key]?.let { playerId ->
+                availablePlayers.firstOrNull { it.id == playerId }
+            }
+        }
     val starterIds = starters.map { it.id }.toSet()
     val substitutes = availablePlayers.filter { it.id !in starterIds }
 
@@ -140,17 +143,26 @@ fun TacticalLineupScreen(
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBackClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextWhite)
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = TextWhite,
+                    )
                 }
                 Column(modifier = Modifier.padding(start = 6.dp)) {
-                    Text("Alineación Táctica", color = TextWhite, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Alineación Táctica",
+                        color = TextWhite,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
                     Text(
                         "Formación del Equipo • ${savedLineup?.status?.label ?: "Sin guardar"}",
                         color = if (savedLineup == null) TextMuted else NeonGreen,
-                        fontSize = 13.sp
+                        fontSize = 13.sp,
                     )
                 }
             }
@@ -159,30 +171,30 @@ fun TacticalLineupScreen(
                 Text(
                     "La pizarra táctica está disponible solo para el Director Técnico.",
                     color = TextMuted,
-                    modifier = Modifier.padding(top = 22.dp)
+                    modifier = Modifier.padding(top = 22.dp),
                 )
             } else if (publishedConvocations.isEmpty() || convocation == null) {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = CardBackground)
+                    colors = CardDefaults.cardColors(containerColor = CardBackground),
                 ) {
                     Text(
                         "Publica una convocatoria para armar la alineación con los jugadores citados.",
                         color = TextMuted,
-                        modifier = Modifier.padding(18.dp)
+                        modifier = Modifier.padding(18.dp),
                     )
                 }
             } else {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp, bottom = 12.dp)
-                        .background(CardBackground, RoundedCornerShape(12.dp))
-                        .border(1.dp, InputBorder, RoundedCornerShape(12.dp))
-                        .clickable { showConvocationPicker = true }
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(top = 10.dp, bottom = 12.dp)
+                            .background(CardBackground, RoundedCornerShape(12.dp))
+                            .border(1.dp, InputBorder, RoundedCornerShape(12.dp))
+                            .clickable { showConvocationPicker = true }
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -190,27 +202,35 @@ fun TacticalLineupScreen(
                             color = TextWhite,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             "${formatDate(convocation.date)} • ${availablePlayers.size} confirmados",
                             color = TextMuted,
                             fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 3.dp)
+                            modifier = Modifier.padding(top = 3.dp),
                         )
                     }
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Elegir convocatoria", tint = TextMuted)
+                    Icon(
+                        Icons.Default.ArrowDropDown,
+                        contentDescription = "Elegir convocatoria",
+                        tint = TextMuted,
+                    )
                     DropdownMenu(
                         expanded = showConvocationPicker,
                         onDismissRequest = { showConvocationPicker = false },
-                        modifier = Modifier.heightIn(max = 360.dp)
+                        modifier = Modifier.heightIn(max = 360.dp),
                     ) {
                         publishedConvocations.forEach { option ->
                             DropdownMenuItem(
                                 text = {
                                     Column {
                                         Text("${option.category} • ${option.opponent}")
-                                        Text("${formatDate(option.date)} • ${option.confirmedCount} confirmados", color = TextMuted, fontSize = 12.sp)
+                                        Text(
+                                            "${formatDate(option.date)} • ${option.confirmedCount} confirmados",
+                                            color = TextMuted,
+                                            fontSize = 12.sp,
+                                        )
                                     }
                                 },
                                 onClick = {
@@ -218,7 +238,7 @@ fun TacticalLineupScreen(
                                     showConvocationPicker = false
                                     feedback = null
                                     error = null
-                                }
+                                },
                             )
                         }
                     }
@@ -226,36 +246,50 @@ fun TacticalLineupScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     (presetFormations + "Personalizada").forEach { option ->
-                        val selected = if (option == "Personalizada") formation !in presetFormations else formation == option
+                        val selected =
+                            if (option == "Personalizada") formation !in presetFormations
+                            else formation == option
                         Text(
-                            text = if (selected && option == "Personalizada" && customFormation.isNotBlank()) customFormation else if (option == "Personalizada" && selected) "PERSONALIZADA" else option,
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(
-                                    if (selected) Color(0xFF12332F) else CardBackground,
-                                    CircleShape
+                            text =
+                                if (
+                                    selected &&
+                                        option == "Personalizada" &&
+                                        customFormation.isNotBlank()
                                 )
-                                .border(1.dp, if (selected) NeonGreen else InputBorder, CircleShape)
-                                .clickable {
-                                    if (option == "Personalizada") {
-                                        customFormationInput = customFormation
-                                        showCustomFormationDialog = true
-                                    } else {
-                                        formation = option
-                                        customFormation = ""
-                                        formationError = null
+                                    customFormation
+                                else if (option == "Personalizada" && selected) "PERSONALIZADA"
+                                else option,
+                            modifier =
+                                Modifier.weight(1f)
+                                    .background(
+                                        if (selected) Color(0xFF12332F) else CardBackground,
+                                        CircleShape,
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (selected) NeonGreen else InputBorder,
+                                        CircleShape,
+                                    )
+                                    .clickable {
+                                        if (option == "Personalizada") {
+                                            customFormationInput = customFormation
+                                            showCustomFormationDialog = true
+                                        } else {
+                                            formation = option
+                                            customFormation = ""
+                                            formationError = null
+                                        }
                                     }
-                                }
-                                .padding(horizontal = 6.dp, vertical = 12.dp),
+                                    .padding(horizontal = 6.dp, vertical = 12.dp),
                             color = if (selected) NeonGreen else TextMuted,
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 12.sp,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -273,7 +307,7 @@ fun TacticalLineupScreen(
                         if (captainId !in assigned.values) captainId = ""
                         feedback = null
                         error = null
-                    }
+                    },
                 )
 
                 Text(
@@ -281,31 +315,35 @@ fun TacticalLineupScreen(
                     color = TextMuted,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 14.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(top = 14.dp, bottom = 8.dp),
                 )
                 if (availablePlayers.isEmpty()) {
                     Text(
                         "Aún no hay jugadores confirmados. Regresa a Convocatorias para registrar respuestas.",
                         color = TextMuted,
-                        fontSize = 13.sp
+                        fontSize = 13.sp,
                     )
                 } else if (substitutes.isEmpty()) {
-                    Text("Todos los confirmados están en el campo.", color = TextMuted, fontSize = 13.sp)
+                    Text(
+                        "Todos los confirmados están en el campo.",
+                        color = TextMuted,
+                        fontSize = 13.sp,
+                    )
                 } else {
                     Row(
                         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         substitutes.forEach { player ->
                             Text(
                                 player.name,
                                 color = TextMuted,
-                                modifier = Modifier
-                                    .background(CardBackground, CircleShape)
-                                    .border(1.dp, InputBorder, CircleShape)
-                                    .padding(horizontal = 13.dp, vertical = 9.dp),
+                                modifier =
+                                    Modifier.background(CardBackground, CircleShape)
+                                        .border(1.dp, InputBorder, CircleShape)
+                                        .padding(horizontal = 13.dp, vertical = 9.dp),
                                 fontSize = 12.sp,
-                                maxLines = 1
+                                maxLines = 1,
                             )
                         }
                     }
@@ -317,19 +355,29 @@ fun TacticalLineupScreen(
                     onCaptainChange = {
                         captainId = it
                         feedback = null
-                    }
+                    },
                 )
 
                 Spacer(Modifier.weight(1f, fill = true))
                 error?.let {
-                    Text(it, color = ErrorRed, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                    Text(
+                        it,
+                        color = ErrorRed,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
                 }
                 feedback?.let {
-                    Text(it, color = NeonGreen, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
+                    Text(
+                        it,
+                        color = NeonGreen,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 18.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Button(
                         onClick = {
@@ -338,7 +386,7 @@ fun TacticalLineupScreen(
                                 formation = formation,
                                 startersBySlot = assigned.toMap(),
                                 captainPlayerId = captainId,
-                                status = LineupStatus.DRAFT
+                                status = LineupStatus.DRAFT,
                             )
                             error = null
                             feedback = "Alineación guardada como borrador."
@@ -346,9 +394,14 @@ fun TacticalLineupScreen(
                         modifier = Modifier.weight(1f).height(54.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBackground),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp),
                     ) {
-                        Text("Guardar Borrador", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            "Guardar Borrador",
+                            color = TextWhite,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                        )
                     }
                     Button(
                         onClick = {
@@ -358,10 +411,11 @@ fun TacticalLineupScreen(
                                     formation = formation,
                                     startersBySlot = assigned.toMap(),
                                     captainPlayerId = captainId,
-                                    status = LineupStatus.PUBLISHED
+                                    status = LineupStatus.PUBLISHED,
                                 )
                                 error = null
-                                feedback = "Alineación publicada para el registro del partido en vivo."
+                                feedback =
+                                    "Alineación publicada para el registro del partido en vivo."
                             } catch (exception: IllegalArgumentException) {
                                 error = exception.message
                                 feedback = null
@@ -370,7 +424,7 @@ fun TacticalLineupScreen(
                         modifier = Modifier.weight(1f).height(54.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp),
                     ) {
                         Text("Publicar", color = DarkBackground, fontWeight = FontWeight.Bold)
                     }
@@ -383,17 +437,26 @@ fun TacticalLineupScreen(
         AlertDialog(
             onDismissRequest = { showCustomFormationDialog = false },
             containerColor = CardBackground,
-            title = { Text("Formación personalizada", color = TextWhite, fontWeight = FontWeight.Bold) },
+            title = {
+                Text("Formación personalizada", color = TextWhite, fontWeight = FontWeight.Bold)
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Escribe las líneas de defensa, medio y ataque; deben sumar 10 jugadores (ej. 4-2-3-1).", color = TextMuted, fontSize = 13.sp)
+                    Text(
+                        "Escribe las líneas de defensa, medio y ataque; deben sumar 10 jugadores (ej. 4-2-3-1).",
+                        color = TextMuted,
+                        fontSize = 13.sp,
+                    )
                     OutlinedTextField(
                         value = customFormationInput,
-                        onValueChange = { customFormationInput = it.filter { char -> char.isDigit() || char == '-' }.take(11) },
+                        onValueChange = {
+                            customFormationInput =
+                                it.filter { char -> char.isDigit() || char == '-' }.take(11)
+                        },
                         label = { Text("Formación") },
                         placeholder = { Text("4-2-3-1") },
                         singleLine = true,
-                        colors = lineupFieldColors()
+                        colors = lineupFieldColors(),
                     )
                     formationError?.let { Text(it, color = ErrorRed, fontSize = 12.sp) }
                 }
@@ -410,7 +473,7 @@ fun TacticalLineupScreen(
                             showCustomFormationDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
                 ) {
                     Text("Aplicar", color = DarkBackground)
                 }
@@ -419,7 +482,7 @@ fun TacticalLineupScreen(
                 TextButton(onClick = { showCustomFormationDialog = false }) {
                     Text("Cancelar", color = TextMuted)
                 }
-            }
+            },
         )
     }
 }
@@ -431,25 +494,45 @@ private fun FieldBoard(
     assigned: Map<String, String>,
     availablePlayers: List<ConvokedPlayer>,
     captainId: String,
-    onAssign: (String, String) -> Unit
+    onAssign: (String, String) -> Unit,
 ) {
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(430.dp)
-            .background(Color(0xFF0D3324), RoundedCornerShape(18.dp))
-            .border(2.dp, Color(0xFF24445A), RoundedCornerShape(18.dp))
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(430.dp)
+                .background(Color(0xFF0D3324), RoundedCornerShape(18.dp))
+                .border(2.dp, Color(0xFF24445A), RoundedCornerShape(18.dp))
     ) {
         val width = constraints.maxWidth.toFloat()
         val height = constraints.maxHeight.toFloat()
         Canvas(Modifier.fillMaxSize().padding(2.dp)) {
             val line = Color(0x668DA79A)
-            drawLine(line, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx())
-            drawCircle(line, radius = size.width * 0.095f, center = Offset(size.width / 2, size.height / 2), style = Stroke(2.dp.toPx()))
+            drawLine(
+                line,
+                Offset(0f, size.height / 2),
+                Offset(size.width, size.height / 2),
+                strokeWidth = 2.dp.toPx(),
+            )
+            drawCircle(
+                line,
+                radius = size.width * 0.095f,
+                center = Offset(size.width / 2, size.height / 2),
+                style = Stroke(2.dp.toPx()),
+            )
             val boxWidth = size.width * 0.38f
             val boxHeight = size.height * 0.22f
-            drawRect(line, topLeft = Offset((size.width - boxWidth) / 2, 0f), size = androidx.compose.ui.geometry.Size(boxWidth, boxHeight), style = Stroke(2.dp.toPx()))
-            drawRect(line, topLeft = Offset((size.width - boxWidth) / 2, size.height - boxHeight), size = androidx.compose.ui.geometry.Size(boxWidth, boxHeight), style = Stroke(2.dp.toPx()))
+            drawRect(
+                line,
+                topLeft = Offset((size.width - boxWidth) / 2, 0f),
+                size = androidx.compose.ui.geometry.Size(boxWidth, boxHeight),
+                style = Stroke(2.dp.toPx()),
+            )
+            drawRect(
+                line,
+                topLeft = Offset((size.width - boxWidth) / 2, size.height - boxHeight),
+                size = androidx.compose.ui.geometry.Size(boxWidth, boxHeight),
+                style = Stroke(2.dp.toPx()),
+            )
         }
         slots.forEach { slot ->
             val playerId = assigned[slot.key]
@@ -458,14 +541,16 @@ private fun FieldBoard(
                 slot = slot,
                 player = player,
                 isCaptain = player?.id == captainId,
-                options = availablePlayers.filter { candidate ->
-                    candidate.id !in assigned.values || candidate.id == playerId
-                },
+                options =
+                    availablePlayers.filter { candidate ->
+                        candidate.id !in assigned.values || candidate.id == playerId
+                    },
                 onSelect = { onAssign(slot.key, it) },
-                modifier = Modifier.offset(
-                    x = (maxWidth * slot.x) - 34.dp,
-                    y = (maxHeight * slot.y) - 22.dp
-                )
+                modifier =
+                    Modifier.offset(
+                        x = (maxWidth * slot.x) - 34.dp,
+                        y = (maxHeight * slot.y) - 22.dp,
+                    ),
             )
         }
     }
@@ -474,7 +559,7 @@ private fun FieldBoard(
             "Campo de ${convocation.category}: solo los jugadores confirmados pueden asignarse.",
             color = TextMuted,
             fontSize = 12.sp,
-            modifier = Modifier.padding(top = 6.dp)
+            modifier = Modifier.padding(top = 6.dp),
         )
     }
 }
@@ -486,27 +571,28 @@ private fun FieldSlotPicker(
     isCaptain: Boolean,
     options: List<ConvokedPlayer>,
     onSelect: (String) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Column(
         modifier = modifier.size(width = 68.dp, height = 70.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box {
             Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(if (isCaptain) Color(0xFFFFD54F) else NeonGreen, CircleShape)
-                    .border(1.dp, TextWhite, CircleShape)
-                    .clickable { expanded = true },
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier.size(38.dp)
+                        .background(if (isCaptain) Color(0xFFFFD54F) else NeonGreen, CircleShape)
+                        .border(1.dp, TextWhite, CircleShape)
+                        .clickable { expanded = true },
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    player?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: slot.number.toString(),
+                    player?.name?.firstOrNull()?.uppercaseChar()?.toString()
+                        ?: slot.number.toString(),
                     color = DarkBackground,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -515,7 +601,7 @@ private fun FieldSlotPicker(
                     onClick = {
                         onSelect("")
                         expanded = false
-                    }
+                    },
                 )
                 options.forEach { option ->
                     DropdownMenuItem(
@@ -523,22 +609,22 @@ private fun FieldSlotPicker(
                         onClick = {
                             onSelect(option.id)
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
         }
         Text(
             player?.name?.substringBefore(" ") ?: slotLabel(slot),
-            modifier = Modifier
-                .padding(top = 2.dp)
-                .background(Color(0xDD06130D), RoundedCornerShape(4.dp))
-                .padding(horizontal = 4.dp, vertical = 2.dp),
+            modifier =
+                Modifier.padding(top = 2.dp)
+                    .background(Color(0xDD06130D), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
             color = TextWhite,
             fontSize = 9.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -547,28 +633,40 @@ private fun FieldSlotPicker(
 private fun CaptainSelector(
     players: List<ConvokedPlayer>,
     captainId: String,
-    onCaptainChange: (String) -> Unit
+    onCaptainChange: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val captain = players.firstOrNull { it.id == captainId }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD54F), modifier = Modifier.size(18.dp))
-        Text("Capitán", modifier = Modifier.weight(1f).padding(start = 6.dp), color = Color(0xFFFFD54F), fontWeight = FontWeight.SemiBold)
+        Icon(
+            Icons.Default.Star,
+            contentDescription = null,
+            tint = Color(0xFFFFD54F),
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            "Capitán",
+            modifier = Modifier.weight(1f).padding(start = 6.dp),
+            color = Color(0xFFFFD54F),
+            fontWeight = FontWeight.SemiBold,
+        )
         Box {
             Row(
-                modifier = Modifier
-                    .background(CardBackground, RoundedCornerShape(10.dp))
-                    .border(1.dp, InputBorder, RoundedCornerShape(10.dp))
-                    .clickable { expanded = true }
-                    .padding(horizontal = 12.dp, vertical = 9.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier =
+                    Modifier.background(CardBackground, RoundedCornerShape(10.dp))
+                        .border(1.dp, InputBorder, RoundedCornerShape(10.dp))
+                        .clickable { expanded = true }
+                        .padding(horizontal = 12.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(captain?.let { "${it.name} (${it.position})" } ?: "Seleccionar", color = if (captain == null) TextMuted else TextWhite, fontSize = 12.sp)
+                Text(
+                    captain?.let { "${it.name} (${it.position})" } ?: "Seleccionar",
+                    color = if (captain == null) TextMuted else TextWhite,
+                    fontSize = 12.sp,
+                )
                 Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextMuted)
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -578,7 +676,7 @@ private fun CaptainSelector(
                         onClick = {
                             onCaptainChange(player.id)
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
@@ -587,17 +685,18 @@ private fun CaptainSelector(
 }
 
 @Composable
-private fun lineupFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = TextWhite,
-    unfocusedTextColor = TextWhite,
-    focusedBorderColor = NeonGreen,
-    unfocusedBorderColor = InputBorder,
-    focusedLabelColor = NeonGreen,
-    unfocusedLabelColor = TextMuted,
-    cursorColor = NeonGreen,
-    focusedContainerColor = DarkBackground,
-    unfocusedContainerColor = DarkBackground
-)
+private fun lineupFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextWhite,
+        unfocusedTextColor = TextWhite,
+        focusedBorderColor = NeonGreen,
+        unfocusedBorderColor = InputBorder,
+        focusedLabelColor = NeonGreen,
+        unfocusedLabelColor = TextMuted,
+        cursorColor = NeonGreen,
+        focusedContainerColor = DarkBackground,
+        unfocusedContainerColor = DarkBackground,
+    )
 
 private fun formationSlots(formation: String): List<FieldSlot> {
     val lines = formation.split('-').mapNotNull { it.toIntOrNull() }
@@ -614,17 +713,19 @@ private fun formationSlots(formation: String): List<FieldSlot> {
     return slots
 }
 
-private fun slotLabel(slot: FieldSlot): String = when {
-    slot.line == 0 -> "ARQ"
-    slot.line == 1 -> "DEF ${slot.number - 1}"
-    else -> "POS ${slot.number - 1}"
-}
+private fun slotLabel(slot: FieldSlot): String =
+    when {
+        slot.line == 0 -> "ARQ"
+        slot.line == 1 -> "DEF ${slot.number - 1}"
+        else -> "POS ${slot.number - 1}"
+    }
 
 private fun formatDate(value: String): String {
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
-    } catch (_: java.text.ParseException) {
-        null
-    } ?: return value
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(value)
+        } catch (_: java.text.ParseException) {
+            null
+        } ?: return value
     return SimpleDateFormat("dd/MM/yyyy", Locale("es", "PE")).format(parsed)
 }

@@ -40,7 +40,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -78,26 +77,23 @@ import java.util.Calendar
 import java.util.Locale
 
 private val exerciseIntensities = listOf("Baja", "Media", "Alta")
-private val fallbackCategories = listOf(
-    AcademyCategory("Sub-10", "Carlos Gómez"),
-    AcademyCategory("Sub-12", "Carlos Gómez"),
-    AcademyCategory("Sub-15", "Carlos Gómez"),
-    AcademyCategory("Sub-17", "Carlos Gómez"),
-    AcademyCategory("Primera", "Carlos Gómez")
-)
+private val fallbackCategories =
+    listOf(
+        AcademyCategory("Sub-10", "Carlos Gómez"),
+        AcademyCategory("Sub-12", "Carlos Gómez"),
+        AcademyCategory("Sub-15", "Carlos Gómez"),
+        AcademyCategory("Sub-17", "Carlos Gómez"),
+        AcademyCategory("Primera", "Carlos Gómez"),
+    )
 
 @Composable
-fun TrainingPlannerScreen(
-    viewerRole: UserRole,
-    viewerName: String,
-    onBackClick: () -> Unit
-) {
+fun TrainingPlannerScreen(viewerRole: UserRole, viewerName: String, onBackClick: () -> Unit) {
     if (viewerRole != UserRole.COACH) {
         Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(24.dp),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text("Planificación disponible solo para el Director Técnico.", color = TextWhite)
                 TextButton(onClick = onBackClick) { Text("Volver", color = NeonGreen) }
@@ -107,20 +103,20 @@ fun TrainingPlannerScreen(
     }
 
     val context = LocalContext.current
-    val sessionRepository = remember(context) {
-        TrainingSessionRepository(context.applicationContext)
-    }
-    val academyRepository = remember(context) {
-        AcademyRepository(context.applicationContext)
-    }
-    val coachCategories = remember(academyRepository.academies, viewerName) {
-        academyRepository.academies.flatMap { academy ->
-            academy.categories.filter {
-                it.coachName.equals(viewerName.trim(), ignoreCase = true)
-            }
-        }.distinctBy { it.name.lowercase(Locale.ROOT) }
-            .ifEmpty { fallbackCategories }
-    }
+    val sessionRepository =
+        remember(context) { TrainingSessionRepository(context.applicationContext) }
+    val academyRepository = remember(context) { AcademyRepository(context.applicationContext) }
+    val coachCategories =
+        remember(academyRepository.academies, viewerName) {
+            academyRepository.academies
+                .flatMap { academy ->
+                    academy.categories.filter {
+                        it.coachName.equals(viewerName.trim(), ignoreCase = true)
+                    }
+                }
+                .distinctBy { it.name.lowercase(Locale.ROOT) }
+                .ifEmpty { fallbackCategories }
+        }
     val categoryOptions = coachCategories.map { "${it.name} (${it.coachName})" }
 
     var selectedDate by remember { mutableStateOf(todayAsString()) }
@@ -135,21 +131,21 @@ fun TrainingPlannerScreen(
 
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
+            modifier =
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 18.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = TextWhite
+                        tint = TextWhite,
                     )
                 }
                 Text(
@@ -157,7 +153,7 @@ fun TrainingPlannerScreen(
                     modifier = Modifier.padding(start = 6.dp),
                     color = TextWhite,
                     fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
 
@@ -170,20 +166,17 @@ fun TrainingPlannerScreen(
                     onClick = {
                         val calendar = parseSessionDate(selectedDate)
                         DatePickerDialog(
-                            context,
-                            { _, year, month, day ->
-                                selectedDate = "%04d-%02d-%02d".format(
-                                    Locale.US,
-                                    year,
-                                    month + 1,
-                                    day
-                                )
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    }
+                                context,
+                                { _, year, month, day ->
+                                    selectedDate =
+                                        "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH),
+                            )
+                            .show()
+                    },
                 )
                 PickerField(
                     label = "Hora de inicio",
@@ -193,15 +186,16 @@ fun TrainingPlannerScreen(
                     onClick = {
                         val parts = startTime.split(":")
                         TimePickerDialog(
-                            context,
-                            { _, hour, minute ->
-                                startTime = "%02d:%02d".format(Locale.US, hour, minute)
-                            },
-                            parts.getOrNull(0)?.toIntOrNull() ?: 16,
-                            parts.getOrNull(1)?.toIntOrNull() ?: 0,
-                            true
-                        ).show()
-                    }
+                                context,
+                                { _, hour, minute ->
+                                    startTime = "%02d:%02d".format(Locale.US, hour, minute)
+                                },
+                                parts.getOrNull(0)?.toIntOrNull() ?: 16,
+                                parts.getOrNull(1)?.toIntOrNull() ?: 0,
+                                true,
+                            )
+                            .show()
+                    },
                 )
             }
 
@@ -211,40 +205,40 @@ fun TrainingPlannerScreen(
                 onValueChange = { venue = it },
                 label = "Lugar / Cancha",
                 placeholder = "Cancha Principal Sintética",
-                leadingIcon = Icons.Default.LocationOn
+                leadingIcon = Icons.Default.LocationOn,
             )
             Spacer(Modifier.height(14.dp))
             CategoryPicker(
                 label = "Categoría",
                 selected = category,
                 options = categoryOptions,
-                onSelect = { category = it }
+                onSelect = { category = it },
             )
             Spacer(Modifier.height(14.dp))
             PlannerInput(
                 value = objective,
                 onValueChange = { objective = it },
                 label = "Objetivo principal",
-                placeholder = "Ej. Transición defensiva y presión alta"
+                placeholder = "Ej. Transición defensiva y presión alta",
             )
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     "Ejercicios Agregados",
                     modifier = Modifier.weight(1f),
                     color = TextWhite,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 TextButton(
                     onClick = { showLibraryDialog = true },
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier
-                        .border(1.dp, InputBorder, RoundedCornerShape(12.dp))
-                        .background(CardBackground, RoundedCornerShape(12.dp))
+                    modifier =
+                        Modifier.border(1.dp, InputBorder, RoundedCornerShape(12.dp))
+                            .background(CardBackground, RoundedCornerShape(12.dp)),
                 ) {
                     Icon(Icons.Default.Book, contentDescription = null, tint = NeonGreen)
                     Text(" Biblioteca", color = NeonGreen, fontWeight = FontWeight.SemiBold)
@@ -256,13 +250,13 @@ fun TrainingPlannerScreen(
                     "Agrega ejercicios manualmente o cárgalos desde tu biblioteca.",
                     color = TextMuted,
                     fontSize = 14.sp,
-                    modifier = Modifier.padding(vertical = 12.dp)
+                    modifier = Modifier.padding(vertical = 12.dp),
                 )
             } else {
                 selectedExercises.forEachIndexed { index, exercise ->
                     ExerciseCard(
                         exercise = exercise,
-                        onRemove = { selectedExercises.removeAt(index) }
+                        onRemove = { selectedExercises.removeAt(index) },
                     )
                     Spacer(Modifier.height(12.dp))
                 }
@@ -270,24 +264,40 @@ fun TrainingPlannerScreen(
 
             TextButton(
                 onClick = { showExerciseDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .border(1.5.dp, NeonGreen, RoundedCornerShape(14.dp)),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(56.dp)
+                        .border(1.5.dp, NeonGreen, RoundedCornerShape(14.dp)),
+                contentPadding = PaddingValues(vertical = 12.dp),
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, tint = NeonGreen)
-                Text(" Agregar ejercicio", color = NeonGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    " Agregar ejercicio",
+                    color = NeonGreen,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
 
             formError?.let {
-                Text(it, color = ErrorRed, fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    it,
+                    color = ErrorRed,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
             }
 
             Button(
                 onClick = {
-                    if (venue.isBlank() || objective.isBlank() || category.isBlank() || selectedExercises.isEmpty()) {
-                        formError = "Completa lugar, categoría, objetivo y agrega al menos un ejercicio."
+                    if (
+                        venue.isBlank() ||
+                            objective.isBlank() ||
+                            category.isBlank() ||
+                            selectedExercises.isEmpty()
+                    ) {
+                        formError =
+                            "Completa lugar, categoría, objetivo y agrega al menos un ejercicio."
                     } else {
                         sessionRepository.saveSession(
                             date = selectedDate,
@@ -295,7 +305,7 @@ fun TrainingPlannerScreen(
                             venue = venue,
                             category = category,
                             objective = objective,
-                            exercises = selectedExercises
+                            exercises = selectedExercises,
                         )
                         venue = ""
                         objective = ""
@@ -306,14 +316,14 @@ fun TrainingPlannerScreen(
                 modifier = Modifier.fillMaxWidth().height(60.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                contentPadding = PaddingValues(vertical = 12.dp),
             ) {
                 Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = DarkBackground)
                 Text(
                     "  Guardar Sesión",
                     color = DarkBackground,
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
 
@@ -323,9 +333,10 @@ fun TrainingPlannerScreen(
                     color = TextWhite,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 30.dp, bottom = 12.dp)
+                    modifier = Modifier.padding(top = 30.dp, bottom = 12.dp),
                 )
-                sessionRepository.sessions.sortedByDescending { it.date + it.startTime }
+                sessionRepository.sessions
+                    .sortedByDescending { it.date + it.startTime }
                     .forEach { savedSession ->
                         SavedSessionCard(savedSession)
                         Spacer(Modifier.height(12.dp))
@@ -341,7 +352,7 @@ fun TrainingPlannerScreen(
                 selectedExercises.add(exercise)
                 if (saveToLibrary) sessionRepository.saveExerciseToLibrary(exercise)
                 showExerciseDialog = false
-            }
+            },
         )
     }
 
@@ -352,7 +363,7 @@ fun TrainingPlannerScreen(
             onAddExercise = { exercise ->
                 selectedExercises.add(exercise)
                 showLibraryDialog = false
-            }
+            },
         )
     }
 }
@@ -363,19 +374,19 @@ private fun PickerField(
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Column(modifier = modifier) {
         Text(label, color = TextMuted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp)
-                .background(CardBackground, RoundedCornerShape(15.dp))
-                .border(1.dp, InputBorder, RoundedCornerShape(15.dp))
-                .clickable(onClick = onClick)
-                .padding(horizontal = 14.dp, vertical = 18.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(top = 6.dp)
+                    .background(CardBackground, RoundedCornerShape(15.dp))
+                    .border(1.dp, InputBorder, RoundedCornerShape(15.dp))
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 14.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(icon, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(18.dp))
             Text(
@@ -383,7 +394,7 @@ private fun PickerField(
                 color = TextWhite,
                 modifier = Modifier.padding(start = 8.dp),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -394,7 +405,7 @@ private fun CategoryPicker(
     label: String,
     selected: String,
     options: List<String>,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Column {
@@ -407,7 +418,7 @@ private fun CategoryPicker(
                 readOnly = true,
                 singleLine = true,
                 shape = RoundedCornerShape(15.dp),
-                colors = plannerFieldColors()
+                colors = plannerFieldColors(),
             )
             Box(Modifier.matchParentSize().clickable { expanded = true })
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -417,7 +428,7 @@ private fun CategoryPicker(
                         onClick = {
                             onSelect(option)
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
@@ -430,7 +441,7 @@ private fun ExerciseCard(exercise: TrainingExercise, onRemove: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -439,27 +450,34 @@ private fun ExerciseCard(exercise: TrainingExercise, onRemove: () -> Unit) {
                     modifier = Modifier.weight(1f),
                     color = TextWhite,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 Text(
                     "${exercise.durationMinutes} min",
                     color = TextMuted,
                     fontSize = 12.sp,
-                    modifier = Modifier
-                        .background(DarkBackground, RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 5.dp)
+                    modifier =
+                        Modifier.background(DarkBackground, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
                 )
                 Text(
                     "Int. ${exercise.intensity}",
                     color = intensityColor(exercise.intensity),
                     fontSize = 12.sp,
-                    modifier = Modifier
-                        .padding(start = 6.dp)
-                        .background(intensityColor(exercise.intensity).copy(alpha = 0.12f), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 5.dp)
+                    modifier =
+                        Modifier.padding(start = 6.dp)
+                            .background(
+                                intensityColor(exercise.intensity).copy(alpha = 0.12f),
+                                RoundedCornerShape(6.dp),
+                            )
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
                 )
                 IconButton(onClick = onRemove, modifier = Modifier.size(30.dp)) {
-                    Icon(Icons.Default.DeleteOutline, contentDescription = "Quitar ejercicio", tint = TextMuted)
+                    Icon(
+                        Icons.Default.DeleteOutline,
+                        contentDescription = "Quitar ejercicio",
+                        tint = TextMuted,
+                    )
                 }
             }
             Text(
@@ -467,7 +485,7 @@ private fun ExerciseCard(exercise: TrainingExercise, onRemove: () -> Unit) {
                 color = TextMuted,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }
@@ -476,7 +494,7 @@ private fun ExerciseCard(exercise: TrainingExercise, onRemove: () -> Unit) {
 @Composable
 private fun ExerciseEditorDialog(
     onDismiss: () -> Unit,
-    onSave: (TrainingExercise, Boolean) -> Unit
+    onSave: (TrainingExercise, Boolean) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
@@ -491,8 +509,11 @@ private fun ExerciseEditorDialog(
         title = { Text("Agregar ejercicio", color = TextWhite, fontWeight = FontWeight.Bold) },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 540.dp)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 PlannerInput(name, { name = it }, "Nombre del ejercicio", "Ej. Rondo de posesión")
                 PlannerInput(
@@ -500,7 +521,7 @@ private fun ExerciseEditorDialog(
                     { duration = it.filter(Char::isDigit).take(3) },
                     "Duración (minutos)",
                     "15",
-                    keyboardType = KeyboardType.Number
+                    keyboardType = KeyboardType.Number,
                 )
                 IntensityPicker(intensity = intensity, onSelect = { intensity = it })
                 OutlinedTextField(
@@ -509,16 +530,13 @@ private fun ExerciseEditorDialog(
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Descripción / Instrucciones") },
                     minLines = 3,
-                    colors = plannerFieldColors()
+                    colors = plannerFieldColors(),
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { saveToLibrary = !saveToLibrary }
+                    modifier = Modifier.clickable { saveToLibrary = !saveToLibrary },
                 ) {
-                    Checkbox(
-                        checked = saveToLibrary,
-                        onCheckedChange = { saveToLibrary = it }
-                    )
+                    Checkbox(checked = saveToLibrary, onCheckedChange = { saveToLibrary = it })
                     Text("Guardar en Biblioteca de Ejercicios", color = TextWhite, fontSize = 13.sp)
                 }
                 error?.let { Text(it, color = ErrorRed, fontSize = 13.sp) }
@@ -528,23 +546,23 @@ private fun ExerciseEditorDialog(
             Button(
                 onClick = {
                     val minutes = duration.toIntOrNull()
-                    if (name.isBlank() || minutes == null || minutes <= 0 || instructions.isBlank()) {
+                    if (
+                        name.isBlank() || minutes == null || minutes <= 0 || instructions.isBlank()
+                    ) {
                         error = "Completa el nombre, duración e instrucciones."
                     } else {
                         onSave(
                             TrainingExercise(name.trim(), minutes, intensity, instructions.trim()),
-                            saveToLibrary
+                            saveToLibrary,
                         )
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
             ) {
                 Text("Agregar", color = DarkBackground)
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextMuted) }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar", color = TextMuted) } },
     )
 }
 
@@ -558,7 +576,7 @@ private fun IntensityPicker(intensity: String, onSelect: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth().clickable { expanded = true },
             readOnly = true,
             label = { Text("Intensidad") },
-            colors = plannerFieldColors()
+            colors = plannerFieldColors(),
         )
         Box(Modifier.matchParentSize().clickable { expanded = true })
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -568,7 +586,7 @@ private fun IntensityPicker(intensity: String, onSelect: (String) -> Unit) {
                     onClick = {
                         onSelect(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -579,37 +597,46 @@ private fun IntensityPicker(intensity: String, onSelect: (String) -> Unit) {
 private fun ExerciseLibraryDialog(
     library: List<TrainingExercise>,
     onDismiss: () -> Unit,
-    onAddExercise: (TrainingExercise) -> Unit
+    onAddExercise: (TrainingExercise) -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = CardBackground,
-        title = { Text("Biblioteca de Ejercicios", color = TextWhite, fontWeight = FontWeight.Bold) },
+        title = {
+            Text("Biblioteca de Ejercicios", color = TextWhite, fontWeight = FontWeight.Bold)
+        },
         text = {
             if (library.isEmpty()) {
-                Text("La biblioteca está vacía. Puedes guardar ejercicios al agregarlos.", color = TextMuted)
+                Text(
+                    "La biblioteca está vacía. Puedes guardar ejercicios al agregarlos.",
+                    color = TextMuted,
+                )
             } else {
                 Column(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .heightIn(max = 480.dp)
+                            .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     library.forEach { exercise ->
                         Card(
-                            modifier = Modifier.fillMaxWidth().clickable { onAddExercise(exercise) },
+                            modifier =
+                                Modifier.fillMaxWidth().clickable { onAddExercise(exercise) },
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = DarkBackground)
+                            colors = CardDefaults.cardColors(containerColor = DarkBackground),
                         ) {
                             Column(Modifier.padding(12.dp)) {
                                 Text(
                                     exercise.name,
                                     color = TextWhite,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
                                     "${exercise.durationMinutes} min  •  Intensidad ${exercise.intensity}",
                                     color = NeonGreen,
                                     fontSize = 12.sp,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                    modifier = Modifier.padding(top = 4.dp),
                                 )
                                 Text(
                                     exercise.instructions,
@@ -617,7 +644,7 @@ private fun ExerciseLibraryDialog(
                                     fontSize = 13.sp,
                                     modifier = Modifier.padding(top = 4.dp),
                                     maxLines = 3,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
@@ -625,9 +652,7 @@ private fun ExerciseLibraryDialog(
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Cerrar", color = NeonGreen) }
-        }
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar", color = NeonGreen) } },
     )
 }
 
@@ -636,33 +661,33 @@ private fun SavedSessionCard(session: TrainingSession) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 "${formatSessionDate(session.date)}  •  ${session.startTime}",
                 color = NeonGreen,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 session.objective,
                 color = TextWhite,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 5.dp)
+                modifier = Modifier.padding(top = 5.dp),
             )
             Text(
                 "${session.category}  •  ${session.venue}",
                 color = TextMuted,
                 fontSize = 13.sp,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp),
             )
             Text(
                 "${session.exercises.size} ejercicios  •  ${session.totalDurationMinutes} min",
                 color = TextMuted,
                 fontSize = 12.sp,
-                modifier = Modifier.padding(top = 6.dp)
+                modifier = Modifier.padding(top = 6.dp),
             )
         }
     }
@@ -675,7 +700,7 @@ private fun PlannerInput(
     label: String,
     placeholder: String,
     leadingIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     Column {
         Text(label, color = TextMuted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
@@ -685,54 +710,59 @@ private fun PlannerInput(
             modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
             singleLine = true,
             placeholder = { Text(placeholder, color = TextMuted) },
-            leadingIcon = leadingIcon?.let { icon ->
-                { Icon(icon, contentDescription = null, tint = TextMuted) }
-            },
+            leadingIcon =
+                leadingIcon?.let { icon ->
+                    { Icon(icon, contentDescription = null, tint = TextMuted) }
+                },
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             shape = RoundedCornerShape(15.dp),
-            colors = plannerFieldColors()
+            colors = plannerFieldColors(),
         )
     }
 }
 
 @Composable
-private fun plannerFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = TextWhite,
-    unfocusedTextColor = TextWhite,
-    focusedBorderColor = NeonGreen,
-    unfocusedBorderColor = InputBorder,
-    focusedLabelColor = NeonGreen,
-    unfocusedLabelColor = TextMuted,
-    cursorColor = NeonGreen,
-    focusedContainerColor = CardBackground,
-    unfocusedContainerColor = CardBackground
-)
+private fun plannerFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextWhite,
+        unfocusedTextColor = TextWhite,
+        focusedBorderColor = NeonGreen,
+        unfocusedBorderColor = InputBorder,
+        focusedLabelColor = NeonGreen,
+        unfocusedLabelColor = TextMuted,
+        cursorColor = NeonGreen,
+        focusedContainerColor = CardBackground,
+        unfocusedContainerColor = CardBackground,
+    )
 
-private fun intensityColor(intensity: String) = when (intensity) {
-    "Alta" -> ErrorRed
-    "Baja" -> NeonGreen
-    else -> androidx.compose.ui.graphics.Color(0xFFFFC107)
-}
+private fun intensityColor(intensity: String) =
+    when (intensity) {
+        "Alta" -> ErrorRed
+        "Baja" -> NeonGreen
+        else -> androidx.compose.ui.graphics.Color(0xFFFFC107)
+    }
 
 private fun todayAsString(): String =
     SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().time)
 
 private fun parseSessionDate(date: String): Calendar {
     val calendar = Calendar.getInstance()
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
-    } catch (_: java.text.ParseException) {
-        null
-    }
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
+        } catch (_: java.text.ParseException) {
+            null
+        }
     if (parsed != null) calendar.time = parsed
     return calendar
 }
 
 private fun formatSessionDate(date: String): String {
-    val parsed = try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
-    } catch (_: java.text.ParseException) {
-        null
-    } ?: return date
+    val parsed =
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(date)
+        } catch (_: java.text.ParseException) {
+            null
+        } ?: return date
     return SimpleDateFormat("dd/MM/yyyy", Locale("es", "PE")).format(parsed)
 }

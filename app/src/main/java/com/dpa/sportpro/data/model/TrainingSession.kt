@@ -4,7 +4,7 @@ data class TrainingExercise(
     val name: String,
     val durationMinutes: Int,
     val intensity: String,
-    val instructions: String
+    val instructions: String,
 )
 
 data class TrainingSession(
@@ -14,7 +14,7 @@ data class TrainingSession(
     val venue: String,
     val category: String,
     val objective: String,
-    val exercises: List<TrainingExercise>
+    val exercises: List<TrainingExercise>,
 ) {
     val totalDurationMinutes: Int
         get() = exercises.sumOf { it.durationMinutes }

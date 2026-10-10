@@ -25,23 +25,24 @@ class AttendanceRepository(context: Context) {
         sessionId: String,
         sessionDate: String,
         category: String,
-        entries: List<AttendanceEntry>
+        entries: List<AttendanceEntry>,
     ) {
         require(sessionId.isNotBlank()) { "Selecciona una sesión antes de guardar asistencia." }
         require(entries.isNotEmpty()) { "No hay jugadores activos para registrar." }
         val savedAt = System.currentTimeMillis()
-        val newRecords = entries.map { entry ->
-            PlayerAttendanceRecord(
-                sessionId = sessionId,
-                playerId = entry.player.id,
-                playerName = entry.player.name,
-                category = category,
-                sessionDate = sessionDate,
-                status = entry.status,
-                observation = entry.observation.trim(),
-                updatedAt = savedAt
-            )
-        }
+        val newRecords =
+            entries.map { entry ->
+                PlayerAttendanceRecord(
+                    sessionId = sessionId,
+                    playerId = entry.player.id,
+                    playerName = entry.player.name,
+                    category = category,
+                    sessionDate = sessionDate,
+                    status = entry.status,
+                    observation = entry.observation.trim(),
+                    updatedAt = savedAt,
+                )
+            }
         records = records.filterNot { it.sessionId == sessionId } + newRecords
         persistRecords()
     }
@@ -61,7 +62,7 @@ class AttendanceRepository(context: Context) {
                         sessionDate = value.getString("sessionDate"),
                         status = AttendanceStatus.valueOf(value.getString("status")),
                         observation = value.getString("observation"),
-                        updatedAt = value.getLong("updatedAt")
+                        updatedAt = value.getLong("updatedAt"),
                     )
                 )
             }
@@ -89,20 +90,21 @@ class AttendanceRepository(context: Context) {
     data class AttendanceEntry(
         val player: AttendancePlayer,
         val status: AttendanceStatus,
-        val observation: String
+        val observation: String,
     )
 
     private companion object {
         const val PREFERENCES_NAME = "sportpro_attendance"
         const val RECORDS_KEY = "attendance_records"
 
-        val demoPlayers = listOf(
-            AttendancePlayer("player_mateo", "Mateo Silva Rossi", "Sub-15"),
-            AttendancePlayer("player_lucas", "Lucas Gomez S.", "Sub-15"),
-            AttendancePlayer("player_thiago", "Thiago Ruiz Flores", "Sub-15"),
-            AttendancePlayer("player_gabriel", "Gabriel Mendez O.", "Sub-15"),
-            AttendancePlayer("player_benjamin", "Benjamín Díaz", "Sub-15"),
-            AttendancePlayer("player_santiago", "Santiago Paz", "Sub-15")
-        )
+        val demoPlayers =
+            listOf(
+                AttendancePlayer("player_mateo", "Mateo Silva Rossi", "Sub-15"),
+                AttendancePlayer("player_lucas", "Lucas Gomez S.", "Sub-15"),
+                AttendancePlayer("player_thiago", "Thiago Ruiz Flores", "Sub-15"),
+                AttendancePlayer("player_gabriel", "Gabriel Mendez O.", "Sub-15"),
+                AttendancePlayer("player_benjamin", "Benjamín Díaz", "Sub-15"),
+                AttendancePlayer("player_santiago", "Santiago Paz", "Sub-15"),
+            )
     }
 }

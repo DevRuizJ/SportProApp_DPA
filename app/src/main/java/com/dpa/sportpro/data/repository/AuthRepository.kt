@@ -9,6 +9,7 @@ import kotlinx.coroutines.tasks.await
 
 sealed class AuthResult {
     data class Success(val userProfile: UserProfile) : AuthResult()
+
     data class Error(val message: String) : AuthResult()
 }
 
@@ -18,18 +19,24 @@ interface AuthRepository {
 
 class AuthRepositoryImpl : AuthRepository {
 
-    private val firebaseAuth: FirebaseAuth? = try {
-        FirebaseAuth.getInstance()
-    } catch (e: Exception) {
-        null
-    }
+    private val firebaseAuth: FirebaseAuth? =
+        try {
+            FirebaseAuth.getInstance()
+        } catch (e: Exception) {
+            null
+        }
 
-    private val mockUsers = mapOf(
-        "dt@sportpro.com" to UserProfile("dt_1", "dt@sportpro.com", "Carlos", "Gómez", UserRole.COACH),
-        "jugador@sportpro.com" to UserProfile("jug_1", "jugador@sportpro.com", "Mateo", "Silva", UserRole.PLAYER),
-        "padre@sportpro.com" to UserProfile("pad_1", "padre@sportpro.com", "Juan", "Silva", UserRole.PARENT),
-        "admin@sportpro.com" to UserProfile("admin_1", "admin@sportpro.com", "Admin", "SportPro", UserRole.ADMIN)
-    )
+    private val mockUsers =
+        mapOf(
+            "dt@sportpro.com" to
+                UserProfile("dt_1", "dt@sportpro.com", "Carlos", "Gómez", UserRole.COACH),
+            "jugador@sportpro.com" to
+                UserProfile("jug_1", "jugador@sportpro.com", "Mateo", "Silva", UserRole.PLAYER),
+            "padre@sportpro.com" to
+                UserProfile("pad_1", "padre@sportpro.com", "Juan", "Silva", UserRole.PARENT),
+            "admin@sportpro.com" to
+                UserProfile("admin_1", "admin@sportpro.com", "Admin", "SportPro", UserRole.ADMIN),
+        )
 
     override suspend fun login(email: String, password: String): AuthResult {
         if (firebaseAuth != null && firebaseAuth.app != null) {
@@ -44,7 +51,7 @@ class AuthRepositoryImpl : AuthRepository {
                             email = firebaseUser.email ?: email,
                             names = firebaseUser.displayName ?: "Usuario",
                             lastNames = "",
-                            role = role
+                            role = role,
                         )
                     )
                 }

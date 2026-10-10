@@ -8,9 +8,9 @@ import com.dpa.sportpro.data.model.FeePlayer
 import com.dpa.sportpro.data.model.FeeStatus
 import com.dpa.sportpro.data.model.MonthlyFee
 import com.dpa.sportpro.model.UserRole
+import java.util.Calendar
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Calendar
 
 class MonthlyFeeRepository(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -23,24 +23,25 @@ class MonthlyFeeRepository(context: Context) {
     fun visiblePlayers(viewerRole: UserRole, viewerName: String): List<FeePlayer> =
         when (viewerRole) {
             UserRole.ADMIN -> players
-            UserRole.PLAYER, UserRole.PARENT -> players.filter { player ->
-                player.linkedAccountNames.any {
-                    it.equals(viewerName.trim(), ignoreCase = true)
+            UserRole.PLAYER,
+            UserRole.PARENT ->
+                players.filter { player ->
+                    player.linkedAccountNames.any {
+                        it.equals(viewerName.trim(), ignoreCase = true)
+                    }
                 }
-            }
             else -> emptyList()
         }
 
     fun feeFor(playerId: String, year: Int, month: Int): MonthlyFee =
-        fees.firstOrNull {
-            it.playerId == playerId && it.year == year && it.month == month
-        } ?: MonthlyFee(
-            playerId = playerId,
-            year = year,
-            month = month,
-            amount = DEFAULT_AMOUNT,
-            status = FeeStatus.PENDING
-        )
+        fees.firstOrNull { it.playerId == playerId && it.year == year && it.month == month }
+            ?: MonthlyFee(
+                playerId = playerId,
+                year = year,
+                month = month,
+                amount = DEFAULT_AMOUNT,
+                status = FeeStatus.PENDING,
+            )
 
     fun updateFee(playerId: String, year: Int, month: Int, amount: Double, status: FeeStatus) {
         require(players.any { it.id == playerId }) { "Jugador no encontrado." }
@@ -49,9 +50,9 @@ class MonthlyFeeRepository(context: Context) {
         require(amount >= 0.0) { "El monto no puede ser negativo." }
 
         val updatedFee = MonthlyFee(playerId, year, month, amount, status)
-        fees = fees.filterNot {
-            it.playerId == playerId && it.year == year && it.month == month
-        } + updatedFee
+        fees =
+            fees.filterNot { it.playerId == playerId && it.year == year && it.month == month } +
+                updatedFee
         persistFees()
     }
 
@@ -67,7 +68,7 @@ class MonthlyFeeRepository(context: Context) {
                         year = value.getInt("year"),
                         month = value.getInt("month"),
                         amount = value.getDouble("amount"),
-                        status = FeeStatus.fromLabel(value.getString("status"))
+                        status = FeeStatus.fromLabel(value.getString("status")),
                     )
                 )
             }
@@ -92,17 +93,18 @@ class MonthlyFeeRepository(context: Context) {
     private fun demoFees(): List<MonthlyFee> {
         val year = Calendar.getInstance().get(Calendar.YEAR)
         return (Calendar.JANUARY..Calendar.DECEMBER).map { month ->
-            val status = when (month) {
-                in Calendar.JANUARY..Calendar.MAY -> FeeStatus.PAID
-                Calendar.JUNE -> FeeStatus.EXEMPT
-                else -> FeeStatus.PENDING
-            }
+            val status =
+                when (month) {
+                    in Calendar.JANUARY..Calendar.MAY -> FeeStatus.PAID
+                    Calendar.JUNE -> FeeStatus.EXEMPT
+                    else -> FeeStatus.PENDING
+                }
             MonthlyFee(
                 playerId = DEMO_PLAYER_ID,
                 year = year,
                 month = month,
                 amount = DEFAULT_AMOUNT,
-                status = status
+                status = status,
             )
         }
     }
@@ -115,13 +117,14 @@ class MonthlyFeeRepository(context: Context) {
         const val MIN_YEAR = 2020
         const val MAX_YEAR = 2100
 
-        val demoPlayers = listOf(
-            FeePlayer(
-                id = DEMO_PLAYER_ID,
-                name = "Mateo Silva",
-                category = "Sub-15",
-                linkedAccountNames = listOf("Mateo Silva", "Juan Silva")
+        val demoPlayers =
+            listOf(
+                FeePlayer(
+                    id = DEMO_PLAYER_ID,
+                    name = "Mateo Silva",
+                    category = "Sub-15",
+                    linkedAccountNames = listOf("Mateo Silva", "Juan Silva"),
+                )
             )
-        )
     }
 }

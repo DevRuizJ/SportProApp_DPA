@@ -5,14 +5,14 @@ enum class AttendanceStatus(val label: String) {
     PRESENT("Presente"),
     LATE("Tardanza"),
     EXCUSED_ABSENCE("Falta Justificada"),
-    UNEXCUSED_ABSENCE("Falta Injustificada")
+    UNEXCUSED_ABSENCE("Falta Injustificada"),
 }
 
 data class AttendancePlayer(
     val id: String,
     val name: String,
     val category: String,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
 )
 
 data class PlayerAttendanceRecord(
@@ -23,5 +23,5 @@ data class PlayerAttendanceRecord(
     val sessionDate: String,
     val status: AttendanceStatus,
     val observation: String,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

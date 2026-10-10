@@ -8,5 +8,5 @@ data class UserProfile(
     val names: String,
     val lastNames: String,
     val role: UserRole,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
 )

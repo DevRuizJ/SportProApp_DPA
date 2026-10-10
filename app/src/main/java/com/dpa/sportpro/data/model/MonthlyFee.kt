@@ -4,7 +4,7 @@ data class FeePlayer(
     val id: String,
     val name: String,
     val category: String,
-    val linkedAccountNames: List<String>
+    val linkedAccountNames: List<String>,
 )
 
 enum class FeeStatus(val label: String) {
@@ -23,5 +23,5 @@ data class MonthlyFee(
     val year: Int,
     val month: Int,
     val amount: Double,
-    val status: FeeStatus
+    val status: FeeStatus,
 )

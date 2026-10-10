@@ -40,28 +40,26 @@ fun RoleChip(
     role: UserRole,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .background(
-                color = CardBackground,
-                shape = RoundedCornerShape(24.dp)
-            )
-            .border(
-                width = if (isSelected) 1.5.dp else 0.dp,
-                color = if (isSelected) NeonGreen else Color.Transparent,
-                shape = RoundedCornerShape(24.dp)
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .background(color = CardBackground, shape = RoundedCornerShape(24.dp))
+                .border(
+                    width = if (isSelected) 1.5.dp else 0.dp,
+                    color = if (isSelected) NeonGreen else Color.Transparent,
+                    shape = RoundedCornerShape(24.dp),
+                )
+                .clickable { onClick() }
+                .padding(horizontal = 18.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = role.displayName,
             color = if (isSelected) NeonGreen else TextMuted,
             fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
         )
     }
 }
@@ -77,7 +75,7 @@ fun SportProInputField(
     isPassword: Boolean = false,
     isPasswordVisible: Boolean = false,
     onTogglePasswordVisibility: (() -> Unit)? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -85,7 +83,7 @@ fun SportProInputField(
             color = TextMuted,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 6.dp)
+            modifier = Modifier.padding(bottom = 6.dp),
         )
 
         OutlinedTextField(
@@ -93,39 +91,41 @@ fun SportProInputField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    color = TextPlaceholder,
-                    fontSize = 15.sp
-                )
-            },
+            placeholder = { Text(text = placeholder, color = TextPlaceholder, fontSize = 15.sp) },
             singleLine = true,
             isError = errorMessage != null,
-            visualTransformation = if (isPassword && !isPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None,
-            trailingIcon = if (isPassword && onTogglePasswordVisibility != null) {
-                {
-                    IconButton(onClick = onTogglePasswordVisibility) {
-                        Icon(
-                            imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
-                            tint = TextMuted
-                        )
+            visualTransformation =
+                if (isPassword && !isPasswordVisible) PasswordVisualTransformation()
+                else VisualTransformation.None,
+            trailingIcon =
+                if (isPassword && onTogglePasswordVisibility != null) {
+                    {
+                        IconButton(onClick = onTogglePasswordVisibility) {
+                            Icon(
+                                imageVector =
+                                    if (isPasswordVisible) Icons.Default.Visibility
+                                    else Icons.Default.VisibilityOff,
+                                contentDescription =
+                                    if (isPasswordVisible) "Ocultar contraseña"
+                                    else "Mostrar contraseña",
+                                tint = TextMuted,
+                            )
+                        }
                     }
-                }
-            } else null,
+                } else null,
             keyboardOptions = keyboardOptions,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = CardBackground,
-                unfocusedContainerColor = CardBackground,
-                disabledContainerColor = CardBackground,
-                errorContainerColor = CardBackground,
-                focusedBorderColor = NeonGreen,
-                unfocusedBorderColor = InputBorder,
-                errorBorderColor = ErrorRed,
-                focusedTextColor = TextWhite,
-                unfocusedTextColor = TextWhite
-            )
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CardBackground,
+                    unfocusedContainerColor = CardBackground,
+                    disabledContainerColor = CardBackground,
+                    errorContainerColor = CardBackground,
+                    focusedBorderColor = NeonGreen,
+                    unfocusedBorderColor = InputBorder,
+                    errorBorderColor = ErrorRed,
+                    focusedTextColor = TextWhite,
+                    unfocusedTextColor = TextWhite,
+                ),
         )
 
         errorMessage?.let { error ->
@@ -133,7 +133,7 @@ fun SportProInputField(
                 text = error,
                 color = ErrorRed,
                 fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                modifier = Modifier.padding(top = 4.dp, start = 4.dp),
             )
         }
     }

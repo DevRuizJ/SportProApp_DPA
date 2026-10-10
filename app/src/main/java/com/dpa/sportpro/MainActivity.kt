@@ -23,10 +23,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             SportProAppTheme {
                 val navController = rememberNavController()
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    containerColor = DarkBackground
-                ) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize(), containerColor = DarkBackground) {
+                    innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
                         SportProNavGraph(navController = navController)
                     }

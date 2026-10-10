@@ -2,6 +2,7 @@ package com.dpa.sportpro
 
 import com.dpa.sportpro.model.UserRole
 import com.dpa.sportpro.ui.register.RegisterViewModel
+import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -9,7 +10,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.util.Calendar
 
 class RegisterViewModelTest {
 
@@ -79,24 +79,18 @@ class RegisterViewModelTest {
 
     @Test
     fun minorCalculationSetsIsMinorCorrectly() {
-        val minorCalendar = Calendar.getInstance().apply {
-            add(Calendar.YEAR, -14)
-        }
+        val minorCalendar = Calendar.getInstance().apply { add(Calendar.YEAR, -14) }
         viewModel.onBirthDateSelected(minorCalendar.timeInMillis)
         assertTrue(viewModel.uiState.value.isMinor)
 
-        val adultCalendar = Calendar.getInstance().apply {
-            add(Calendar.YEAR, -20)
-        }
+        val adultCalendar = Calendar.getInstance().apply { add(Calendar.YEAR, -20) }
         viewModel.onBirthDateSelected(adultCalendar.timeInMillis)
         assertFalse(viewModel.uiState.value.isMinor)
     }
 
     @Test
     fun successfulRegistrationSetsSuccessMessageAndFlag() {
-        val minorCalendar = Calendar.getInstance().apply {
-            add(Calendar.YEAR, -15)
-        }
+        val minorCalendar = Calendar.getInstance().apply { add(Calendar.YEAR, -15) }
 
         viewModel.onRoleSelected(UserRole.PLAYER)
         viewModel.onNamesChanged("Mateo")

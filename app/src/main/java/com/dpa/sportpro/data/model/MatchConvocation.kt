@@ -6,18 +6,18 @@ data class ConvokedPlayer(
     val position: String,
     val linkedAccountNames: List<String>,
     val response: ConvocationResponse = ConvocationResponse.PENDING,
-    val justification: String = ""
+    val justification: String = "",
 )
 
 enum class MatchType(val label: String) {
     FRIENDLY("Amistoso"),
-    OFFICIAL("Oficial")
+    OFFICIAL("Oficial"),
 }
 
 enum class ConvocationResponse(val label: String) {
     PENDING("Pendiente"),
     CONFIRMED("Confirmo"),
-    UNAVAILABLE("No disponible")
+    UNAVAILABLE("No disponible"),
 }
 
 data class MatchConvocation(
@@ -31,7 +31,7 @@ data class MatchConvocation(
     val venue: String,
     val players: List<ConvokedPlayer>,
     val isPublished: Boolean,
-    val publishedAt: Long?
+    val publishedAt: Long?,
 ) {
     val confirmedCount: Int
         get() = players.count { it.response == ConvocationResponse.CONFIRMED }

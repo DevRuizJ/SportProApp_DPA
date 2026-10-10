@@ -60,10 +60,7 @@ import com.dpa.sportpro.ui.theme.TextWhite
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun RegisterScreen(
-    viewModel: RegisterViewModel = viewModel(),
-    onNavigateToLogin: () -> Unit = {}
-) {
+fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onNavigateToLogin: () -> Unit = {}) {
     val uiState by viewModel.uiState.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -71,30 +68,27 @@ fun RegisterScreen(
 
     val datePickerState = rememberDatePickerState()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = DarkBackground
-    ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 36.dp),
-            verticalArrangement = Arrangement.Top
+            modifier =
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 36.dp),
+            verticalArrangement = Arrangement.Top,
         ) {
             // Header
             Text(
                 text = "Crea tu Cuenta",
                 color = TextWhite,
                 fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Únete a la plataforma líder de gestión de fútbol base.",
                 color = TextMuted,
                 fontSize = 15.sp,
-                lineHeight = 20.sp
+                lineHeight = 20.sp,
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -104,21 +98,21 @@ fun RegisterScreen(
                 text = "Selecciona tu Rol",
                 color = TextMuted,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             Spacer(modifier = Modifier.height(12.dp))
 
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 UserRole.entries.forEach { role ->
                     val isSelected = uiState.selectedRole == role
                     RoleChip(
                         role = role,
                         isSelected = isSelected,
-                        onClick = { viewModel.onRoleSelected(role) }
+                        onClick = { viewModel.onRoleSelected(role) },
                     )
                 }
             }
@@ -128,7 +122,7 @@ fun RegisterScreen(
                     text = error,
                     color = ErrorRed,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
 
@@ -141,7 +135,7 @@ fun RegisterScreen(
                 onValueChange = viewModel::onNamesChanged,
                 placeholder = "Ej. Mateo Silva",
                 errorMessage = uiState.namesError,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -152,7 +146,7 @@ fun RegisterScreen(
                 onValueChange = viewModel::onLastNamesChanged,
                 placeholder = "Ej. Rossi Castro",
                 errorMessage = uiState.lastNamesError,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -163,10 +157,8 @@ fun RegisterScreen(
                 onValueChange = viewModel::onEmailChanged,
                 placeholder = "correo@ejemplo.com",
                 errorMessage = uiState.emailError,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                )
+                keyboardOptions =
+                    KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             )
 
             // Conditional Fecha de Nacimiento field for JUG & PAD
@@ -179,48 +171,52 @@ fun RegisterScreen(
                         color = TextMuted,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 6.dp)
+                        modifier = Modifier.padding(bottom = 6.dp),
                     )
 
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .background(CardBackground, RoundedCornerShape(12.dp))
-                            .border(
-                                width = 1.dp,
-                                color = if (uiState.birthDateError != null) ErrorRed else InputBorder,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .clickable { showDatePicker = true }
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.CenterStart
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .height(56.dp)
+                                .background(CardBackground, RoundedCornerShape(12.dp))
+                                .border(
+                                    width = 1.dp,
+                                    color =
+                                        if (uiState.birthDateError != null) ErrorRed
+                                        else InputBorder,
+                                    shape = RoundedCornerShape(12.dp),
+                                )
+                                .clickable { showDatePicker = true }
+                                .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart,
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = uiState.birthDate.ifEmpty { "12 de Abril, 2010" },
-                                color = if (uiState.birthDate.isEmpty()) TextPlaceholder else TextWhite,
-                                fontSize = 15.sp
+                                color =
+                                    if (uiState.birthDate.isEmpty()) TextPlaceholder else TextWhite,
+                                fontSize = 15.sp,
                             )
                             Icon(
                                 imageVector = Icons.Default.CalendarToday,
                                 contentDescription = "Seleccionar fecha",
                                 tint = TextMuted,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                         }
                     }
 
                     if (uiState.birthDate.isNotEmpty() && uiState.isMinor) {
                         Text(
-                            text = "ℹ️ Registrado como menor de edad. Se habilitará vinculación con apoderado.",
+                            text =
+                                "ℹ️ Registrado como menor de edad. Se habilitará vinculación con apoderado.",
                             color = NeonGreen,
                             fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp),
                         )
                     }
 
@@ -229,7 +225,7 @@ fun RegisterScreen(
                             text = error,
                             color = ErrorRed,
                             fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp),
                         )
                     }
                 }
@@ -246,10 +242,11 @@ fun RegisterScreen(
                 isPassword = true,
                 isPasswordVisible = isPasswordVisible,
                 onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Next
-                )
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Next,
+                    ),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -262,11 +259,14 @@ fun RegisterScreen(
                 errorMessage = uiState.confirmPasswordError,
                 isPassword = true,
                 isPasswordVisible = isConfirmPasswordVisible,
-                onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                )
+                onTogglePasswordVisibility = {
+                    isConfirmPasswordVisible = !isConfirmPasswordVisible
+                },
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -274,20 +274,15 @@ fun RegisterScreen(
             // Main Action Button: "Crear cuenta"
             Button(
                 onClick = { viewModel.register() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
+                modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NeonGreen,
-                    contentColor = DarkBackground
-                )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = NeonGreen,
+                        contentColor = DarkBackground,
+                    ),
             ) {
-                Text(
-                    text = "Crear cuenta",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(text = "Crear cuenta", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -296,19 +291,15 @@ fun RegisterScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "¿Ya tienes cuenta? ",
-                    color = TextMuted,
-                    fontSize = 14.sp
-                )
+                Text(text = "¿Ya tienes cuenta? ", color = TextMuted, fontSize = 14.sp)
                 Text(
                     text = "Inicia sesión",
                     color = NeonGreen,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateToLogin() }
+                    modifier = Modifier.clickable { onNavigateToLogin() },
                 )
             }
         }
@@ -334,7 +325,7 @@ fun RegisterScreen(
                 TextButton(onClick = { showDatePicker = false }) {
                     Text("Cancelar", color = TextMuted)
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -350,14 +341,14 @@ fun RegisterScreen(
                     text = "¡Cuenta Creada!",
                     color = NeonGreen,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontSize = 20.sp,
                 )
             },
             text = {
                 Text(
                     text = uiState.successMessage ?: "Tu cuenta ha sido registrada correctamente.",
                     color = TextWhite,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
                 )
             },
             confirmButton = {
@@ -366,11 +357,11 @@ fun RegisterScreen(
                         viewModel.dismissSuccessDialog()
                         onNavigateToLogin()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
                 ) {
                     Text("Continuar", color = DarkBackground, fontWeight = FontWeight.Bold)
                 }
-            }
+            },
         )
     }
 }

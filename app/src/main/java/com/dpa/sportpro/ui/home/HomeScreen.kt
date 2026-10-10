@@ -61,38 +61,32 @@ fun HomeScreen(
     onConvocationsClick: () -> Unit = {},
     onTacticalLineupClick: () -> Unit = {},
     onEventCatalogClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = DarkBackground
-    ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .background(CardBackground, CircleShape)
-                            .border(1.5.dp, NeonGreen, CircleShape),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier.size(52.dp)
+                                .background(CardBackground, CircleShape)
+                                .border(1.5.dp, NeonGreen, CircleShape),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Avatar",
                             tint = NeonGreen,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(28.dp),
                         )
                     }
 
@@ -101,20 +95,28 @@ fun HomeScreen(
                             text = "Hola, ${userProfile.names}",
                             color = TextWhite,
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Box(
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .background(NeonGreen.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-                                .border(1.dp, NeonGreen.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 10.dp, vertical = 2.dp)
+                            modifier =
+                                Modifier.padding(top = 4.dp)
+                                    .background(
+                                        NeonGreen.copy(alpha = 0.15f),
+                                        RoundedCornerShape(12.dp),
+                                    )
+                                    .border(
+                                        1.dp,
+                                        NeonGreen.copy(alpha = 0.5f),
+                                        RoundedCornerShape(12.dp),
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "Rol: ${userProfile.role.displayName} (${userProfile.role.code})",
+                                text =
+                                    "Rol: ${userProfile.role.displayName} (${userProfile.role.code})",
                                 color = NeonGreen,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }
@@ -124,7 +126,7 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Cerrar sesión",
-                        tint = ErrorRed
+                        tint = ErrorRed,
                     )
                 }
             }
@@ -134,21 +136,21 @@ fun HomeScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "Panel de ${userProfile.role.displayName}",
                         color = NeonGreen,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = getRoleWelcomeMessage(userProfile.role),
                         color = TextMuted,
                         fontSize = 14.sp,
-                        lineHeight = 20.sp
+                        lineHeight = 20.sp,
                     )
                 }
             }
@@ -159,7 +161,7 @@ fun HomeScreen(
                 text = "Funciones Principales",
                 color = TextWhite,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -170,53 +172,61 @@ fun HomeScreen(
                         "Gestión de Plantilla",
                         "Control de asistencias y ficha técnica",
                         Icons.Default.Group,
-                        onClick = onPlayerProfileClick
+                        onClick = onPlayerProfileClick,
                     )
                     FeatureCard(
                         "Planificar Sesión",
                         "Objetivos, ejercicios y preparación táctica",
                         Icons.Default.SportsSoccer,
-                        onClick = onTrainingPlannerClick
+                        onClick = onTrainingPlannerClick,
                     )
                     FeatureCard(
                         "Control de Asistencia",
                         "Registra participación y puntualidad del equipo",
                         Icons.Default.Badge,
-                        onClick = onAttendanceClick
+                        onClick = onAttendanceClick,
                     )
                     FeatureCard(
                         "Convocatorias",
                         "Publica partidos y revisa disponibilidad del equipo",
                         Icons.Default.CalendarMonth,
-                        onClick = onConvocationsClick
+                        onClick = onConvocationsClick,
                     )
                     FeatureCard(
                         "Alineación Táctica",
                         "Arma el once titular y los suplentes",
                         Icons.Default.SportsSoccer,
-                        onClick = onTacticalLineupClick
+                        onClick = onTacticalLineupClick,
                     )
                     FeatureCard(
                         "Catálogo de Eventos",
                         "Configura acciones del partido por categoría",
                         Icons.Default.Badge,
-                        onClick = onEventCatalogClick
+                        onClick = onEventCatalogClick,
                     )
                 }
                 UserRole.PLAYER -> {
-                    FeatureCard("Mis Estadísticas", "Rendimiento, minutos y goles de la temporada", Icons.Default.SportsSoccer)
+                    FeatureCard(
+                        "Mis Estadísticas",
+                        "Rendimiento, minutos y goles de la temporada",
+                        Icons.Default.SportsSoccer,
+                    )
                     FeatureCard(
                         "Convocatorias",
                         "Confirma tu disponibilidad para los partidos",
                         Icons.Default.CalendarMonth,
-                        onClick = onConvocationsClick
+                        onClick = onConvocationsClick,
                     )
-                    FeatureCard("Ficha Médica y Deportiva", "Registro de salud y evaluaciones", Icons.Default.Badge)
+                    FeatureCard(
+                        "Ficha Médica y Deportiva",
+                        "Registro de salud y evaluaciones",
+                        Icons.Default.Badge,
+                    )
                     FeatureCard(
                         "Mis Mensualidades",
                         "Consulta el estado de tus cuotas",
                         Icons.Default.CalendarMonth,
-                        onClick = onMonthlyFeesClick
+                        onClick = onMonthlyFeesClick,
                     )
                 }
                 UserRole.PARENT -> {
@@ -224,48 +234,56 @@ fun HomeScreen(
                         "Mis Hijos Vinculados",
                         "Ficha deportiva de Mateo Silva Rossi",
                         Icons.Default.Group,
-                        onClick = onPlayerProfileClick
+                        onClick = onPlayerProfileClick,
                     )
                     FeatureCard(
                         "Autorizaciones y Cuotas",
                         "Consulta el estado de las mensualidades vinculadas",
                         Icons.Default.Badge,
-                        onClick = onMonthlyFeesClick
+                        onClick = onMonthlyFeesClick,
                     )
                     FeatureCard(
                         "Convocatorias",
                         "Responde por los jugadores vinculados",
                         Icons.Default.CalendarMonth,
-                        onClick = onConvocationsClick
+                        onClick = onConvocationsClick,
                     )
                 }
                 UserRole.ADMIN -> {
-                    FeatureCard("Gestión Global de Usuarios", "Aprobación de cuentas y asignación de roles", Icons.Default.Group)
+                    FeatureCard(
+                        "Gestión Global de Usuarios",
+                        "Aprobación de cuentas y asignación de roles",
+                        Icons.Default.Group,
+                    )
                     FeatureCard(
                         "Configuración de Equipos",
                         "Registro de academias, categorías y directores técnicos",
                         Icons.Default.Settings,
-                        onClick = onAcademiesClick
+                        onClick = onAcademiesClick,
                     )
                     FeatureCard(
                         "Ficha Técnica de Jugadores",
                         "Datos deportivos y evolución física",
                         Icons.Default.Person,
-                        onClick = onPlayerProfileClick
+                        onClick = onPlayerProfileClick,
                     )
                     FeatureCard(
                         "Mensualidades",
                         "Control interno de cuotas por jugador y periodo",
                         Icons.Default.CalendarMonth,
-                        onClick = onMonthlyFeesClick
+                        onClick = onMonthlyFeesClick,
                     )
                     FeatureCard(
                         "Catálogo de Eventos",
                         "Configura acciones del partido por categoría",
                         Icons.Default.Badge,
-                        onClick = onEventCatalogClick
+                        onClick = onEventCatalogClick,
                     )
-                    FeatureCard("Reportes del Club", "Métricas financieras y deportivas", Icons.Default.Badge)
+                    FeatureCard(
+                        "Reportes del Club",
+                        "Métricas financieras y deportivas",
+                        Icons.Default.Badge,
+                    )
                 }
             }
 
@@ -273,58 +291,46 @@ fun HomeScreen(
 
             Button(
                 onClick = onLogoutClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = CardBackground,
-                    contentColor = ErrorRed
-                )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = CardBackground,
+                        contentColor = ErrorRed,
+                    ),
             ) {
-                Text(
-                    text = "Cerrar Sesión",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(text = "Cerrar Sesión", fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
 @Composable
-fun FeatureCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    onClick: (() -> Unit)? = null
-) {
+fun FeatureCard(title: String, subtitle: String, icon: ImageVector, onClick: (() -> Unit)? = null) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(bottom = 12.dp)
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(DarkBackground, RoundedCornerShape(10.dp))
-                    .border(1.dp, InputBorder, RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier.size(44.dp)
+                        .background(DarkBackground, RoundedCornerShape(10.dp))
+                        .border(1.dp, InputBorder, RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = NeonGreen,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(22.dp),
                 )
             }
 
@@ -333,13 +339,9 @@ fun FeatureCard(
                     text = title,
                     color = TextWhite,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
-                Text(
-                    text = subtitle,
-                    color = TextMuted,
-                    fontSize = 13.sp
-                )
+                Text(text = subtitle, color = TextMuted, fontSize = 13.sp)
             }
         }
     }
@@ -347,9 +349,13 @@ fun FeatureCard(
 
 private fun getRoleWelcomeMessage(role: UserRole): String {
     return when (role) {
-        UserRole.COACH -> "Bienvenido Director Técnico. Desde aquí puedes planificar entrenamientos, gestionar convocatorias y analizar el rendimiento de tus jugadores."
-        UserRole.PLAYER -> "Bienvenido Jugador. Revisa tu calendario de entrenamientos, convocatorias para el fin de semana y tu progreso personal."
-        UserRole.PARENT -> "Bienvenido. Aquí puedes hacer seguimiento del rendimiento de tu hijo, autorizar eventos y estar al tanto del calendario del equipo."
-        UserRole.ADMIN -> "Bienvenido Administrador. Tienes acceso completo a la gestión de usuarios, roles, finanzas y configuración del club."
+        UserRole.COACH ->
+            "Bienvenido Director Técnico. Desde aquí puedes planificar entrenamientos, gestionar convocatorias y analizar el rendimiento de tus jugadores."
+        UserRole.PLAYER ->
+            "Bienvenido Jugador. Revisa tu calendario de entrenamientos, convocatorias para el fin de semana y tu progreso personal."
+        UserRole.PARENT ->
+            "Bienvenido. Aquí puedes hacer seguimiento del rendimiento de tu hijo, autorizar eventos y estar al tanto del calendario del equipo."
+        UserRole.ADMIN ->
+            "Bienvenido Administrador. Tienes acceso completo a la gestión de usuarios, roles, finanzas y configuración del club."
     }
 }

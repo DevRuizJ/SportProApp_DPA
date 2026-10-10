@@ -2,7 +2,7 @@ package com.dpa.sportpro.data.model
 
 enum class LineupStatus(val label: String) {
     DRAFT("Borrador"),
-    PUBLISHED("Publicada")
+    PUBLISHED("Publicada"),
 }
 
 data class TacticalLineup(
@@ -11,5 +11,5 @@ data class TacticalLineup(
     val startersBySlot: Map<String, String>,
     val captainPlayerId: String,
     val status: LineupStatus,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

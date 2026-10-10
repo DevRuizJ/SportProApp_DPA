@@ -48,7 +48,7 @@ fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
     onNavigateToRegister: () -> Unit = {},
     onNavigateToHome: (UserProfile) -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {}
+    onForgotPasswordClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -60,17 +60,14 @@ fun LoginScreen(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = DarkBackground
-    ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 48.dp),
+            modifier =
+                Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -82,13 +79,13 @@ fun LoginScreen(
                 text = "¡Bienvenido de vuelta!",
                 color = TextWhite,
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Ingresa tus credenciales para acceder",
                 color = TextMuted,
-                fontSize = 15.sp
+                fontSize = 15.sp,
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -104,10 +101,8 @@ fun LoginScreen(
                 onValueChange = viewModel::onEmailChanged,
                 placeholder = "ejemplo@sportpro.com",
                 errorMessage = uiState.emailError,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                )
+                keyboardOptions =
+                    KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -121,24 +116,22 @@ fun LoginScreen(
                 isPassword = true,
                 isPasswordVisible = isPasswordVisible,
                 onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                )
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Text(
                     text = "¿Olvidaste tu contraseña?",
                     color = NeonGreen,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onForgotPasswordClick() }
+                    modifier = Modifier.clickable { onForgotPasswordClick() },
                 )
             }
 
@@ -147,28 +140,23 @@ fun LoginScreen(
             Button(
                 onClick = { viewModel.login() },
                 enabled = !uiState.isSubmitting,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
+                modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NeonGreen,
-                    contentColor = DarkBackground,
-                    disabledContainerColor = NeonGreen.copy(alpha = 0.5f)
-                )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = NeonGreen,
+                        contentColor = DarkBackground,
+                        disabledContainerColor = NeonGreen.copy(alpha = 0.5f),
+                    ),
             ) {
                 if (uiState.isSubmitting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = DarkBackground,
-                        strokeWidth = 2.5.dp
+                        strokeWidth = 2.5.dp,
                     )
                 } else {
-                    Text(
-                        text = "Iniciar Sesión",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Iniciar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -177,19 +165,15 @@ fun LoginScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "¿No tienes cuenta? ",
-                    color = TextMuted,
-                    fontSize = 14.sp
-                )
+                Text(text = "¿No tienes cuenta? ", color = TextMuted, fontSize = 14.sp)
                 Text(
                     text = "Regístrate",
                     color = NeonGreen,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateToRegister() }
+                    modifier = Modifier.clickable { onNavigateToRegister() },
                 )
             }
         }

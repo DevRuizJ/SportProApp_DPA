@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.dpa.sportpro.data.model.Academy
 import com.dpa.sportpro.data.model.AcademyCategory
+import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.UUID
 
 class AcademyRepository(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -21,16 +21,18 @@ class AcademyRepository(context: Context) {
         crestUri: String,
         mainVenue: String,
         description: String,
-        categories: List<AcademyCategory>
+        categories: List<AcademyCategory>,
     ) {
-        academies = academies + Academy(
-            id = UUID.randomUUID().toString(),
-            name = name.trim(),
-            crestUri = crestUri,
-            mainVenue = mainVenue.trim(),
-            description = description.trim(),
-            categories = categories.map { it.copy(name = it.name.trim()) }
-        )
+        academies =
+            academies +
+                Academy(
+                    id = UUID.randomUUID().toString(),
+                    name = name.trim(),
+                    crestUri = crestUri,
+                    mainVenue = mainVenue.trim(),
+                    description = description.trim(),
+                    categories = categories.map { it.copy(name = it.name.trim()) },
+                )
         persistAcademies()
     }
 
@@ -47,7 +49,7 @@ class AcademyRepository(context: Context) {
                         add(
                             AcademyCategory(
                                 name = categoryObject.getString("name"),
-                                coachName = categoryObject.getString("coachName")
+                                coachName = categoryObject.getString("coachName"),
                             )
                         )
                     }
@@ -59,7 +61,7 @@ class AcademyRepository(context: Context) {
                         crestUri = academyObject.getString("crestUri"),
                         mainVenue = academyObject.getString("mainVenue"),
                         description = academyObject.getString("description"),
-                        categories = categories
+                        categories = categories,
                     )
                 )
             }
@@ -72,9 +74,7 @@ class AcademyRepository(context: Context) {
             val categoryArray = JSONArray()
             academy.categories.forEach { category ->
                 categoryArray.put(
-                    JSONObject()
-                        .put("name", category.name)
-                        .put("coachName", category.coachName)
+                    JSONObject().put("name", category.name).put("coachName", category.coachName)
                 )
             }
             academyArray.put(

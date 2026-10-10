@@ -3,7 +3,7 @@ package com.dpa.sportpro.data.model
 data class PhysicalMeasurement(
     val heightMeters: Double,
     val weightKilograms: Double,
-    val recordedAt: Long
+    val recordedAt: Long,
 )
 
 data class PlayerTechnicalProfile(
@@ -20,5 +20,5 @@ data class PlayerTechnicalProfile(
     val emergencyContactName: String,
     val emergencyRelationship: String,
     val emergencyPhone: String,
-    val physicalHistory: List<PhysicalMeasurement>
+    val physicalHistory: List<PhysicalMeasurement>,
 )

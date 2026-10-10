@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.dpa.sportpro.data.model.PhysicalMeasurement
 import com.dpa.sportpro.data.model.PlayerTechnicalProfile
+import java.util.Calendar
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Calendar
 
 class PlayerTechnicalProfileRepository(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -17,19 +17,23 @@ class PlayerTechnicalProfileRepository(context: Context) {
         private set
 
     fun updateProfile(updated: PlayerTechnicalProfile) {
-        val physicalDataChanged = updated.heightMeters != profile.heightMeters ||
-            updated.weightKilograms != profile.weightKilograms
-        profile = updated.copy(
-            physicalHistory = if (physicalDataChanged) {
-                updated.physicalHistory + PhysicalMeasurement(
-                    heightMeters = updated.heightMeters,
-                    weightKilograms = updated.weightKilograms,
-                    recordedAt = System.currentTimeMillis()
-                )
-            } else {
-                updated.physicalHistory
-            }
-        )
+        val physicalDataChanged =
+            updated.heightMeters != profile.heightMeters ||
+                updated.weightKilograms != profile.weightKilograms
+        profile =
+            updated.copy(
+                physicalHistory =
+                    if (physicalDataChanged) {
+                        updated.physicalHistory +
+                            PhysicalMeasurement(
+                                heightMeters = updated.heightMeters,
+                                weightKilograms = updated.weightKilograms,
+                                recordedAt = System.currentTimeMillis(),
+                            )
+                    } else {
+                        updated.physicalHistory
+                    }
+            )
         persistProfile()
     }
 
@@ -44,7 +48,7 @@ class PlayerTechnicalProfileRepository(context: Context) {
                     PhysicalMeasurement(
                         heightMeters = measurement.getDouble("heightMeters"),
                         weightKilograms = measurement.getDouble("weightKilograms"),
-                        recordedAt = measurement.getLong("recordedAt")
+                        recordedAt = measurement.getLong("recordedAt"),
                     )
                 )
             }
@@ -63,7 +67,7 @@ class PlayerTechnicalProfileRepository(context: Context) {
             emergencyContactName = data.getString("emergencyContactName"),
             emergencyRelationship = data.getString("emergencyRelationship"),
             emergencyPhone = data.getString("emergencyPhone"),
-            physicalHistory = history
+            physicalHistory = history,
         )
     }
 
@@ -77,32 +81,38 @@ class PlayerTechnicalProfileRepository(context: Context) {
                     .put("recordedAt", measurement.recordedAt)
             )
         }
-        preferences.edit().putString(
-            PROFILE_KEY,
-            JSONObject()
-                .put("fullName", profile.fullName)
-                .put("category", profile.category)
-                .put("dateOfBirth", profile.dateOfBirth)
-                .put("primaryPosition", profile.primaryPosition)
-                .put("secondaryPosition", profile.secondaryPosition)
-                .put("dominantFoot", profile.dominantFoot)
-                .put("heightMeters", profile.heightMeters)
-                .put("weightKilograms", profile.weightKilograms)
-                .put("profilePhotoUri", profile.profilePhotoUri)
-                .put("contactPhone", profile.contactPhone)
-                .put("emergencyContactName", profile.emergencyContactName)
-                .put("emergencyRelationship", profile.emergencyRelationship)
-                .put("emergencyPhone", profile.emergencyPhone)
-                .put("physicalHistory", historyArray)
-                .toString()
-        ).apply()
+        preferences
+            .edit()
+            .putString(
+                PROFILE_KEY,
+                JSONObject()
+                    .put("fullName", profile.fullName)
+                    .put("category", profile.category)
+                    .put("dateOfBirth", profile.dateOfBirth)
+                    .put("primaryPosition", profile.primaryPosition)
+                    .put("secondaryPosition", profile.secondaryPosition)
+                    .put("dominantFoot", profile.dominantFoot)
+                    .put("heightMeters", profile.heightMeters)
+                    .put("weightKilograms", profile.weightKilograms)
+                    .put("profilePhotoUri", profile.profilePhotoUri)
+                    .put("contactPhone", profile.contactPhone)
+                    .put("emergencyContactName", profile.emergencyContactName)
+                    .put("emergencyRelationship", profile.emergencyRelationship)
+                    .put("emergencyPhone", profile.emergencyPhone)
+                    .put("physicalHistory", historyArray)
+                    .toString(),
+            )
+            .apply()
     }
 
     private fun demoProfile(): PlayerTechnicalProfile {
-        val measuredAt = Calendar.getInstance().apply {
-            set(2026, Calendar.OCTOBER, 15, 9, 0, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        val measuredAt =
+            Calendar.getInstance()
+                .apply {
+                    set(2026, Calendar.OCTOBER, 15, 9, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                .timeInMillis
         return PlayerTechnicalProfile(
             fullName = "Mateo Silva Rossi",
             category = "Sub-15",
@@ -117,13 +127,14 @@ class PlayerTechnicalProfileRepository(context: Context) {
             emergencyContactName = "Juan Silva Rossi",
             emergencyRelationship = "Padre",
             emergencyPhone = "+51 912 345 678",
-            physicalHistory = listOf(
-                PhysicalMeasurement(
-                    heightMeters = 1.72,
-                    weightKilograms = 65.0,
-                    recordedAt = measuredAt
-                )
-            )
+            physicalHistory =
+                listOf(
+                    PhysicalMeasurement(
+                        heightMeters = 1.72,
+                        weightKilograms = 65.0,
+                        recordedAt = measuredAt,
+                    )
+                ),
         )
     }
 
