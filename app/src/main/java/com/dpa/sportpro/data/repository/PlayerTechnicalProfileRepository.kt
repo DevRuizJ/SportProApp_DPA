@@ -11,7 +11,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class PlayerTechnicalProfileRepository(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences = LocalAccountScope.preferences(context, PREFERENCES_NAME)
 
     var profile by mutableStateOf(loadProfile())
         private set
@@ -106,35 +106,19 @@ class PlayerTechnicalProfileRepository(context: Context) {
     }
 
     private fun demoProfile(): PlayerTechnicalProfile {
-        val measuredAt =
-            Calendar.getInstance()
-                .apply {
-                    set(2026, Calendar.OCTOBER, 15, 9, 0, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-                .timeInMillis
+        // Empty onboarding record; never show another player's sample contact details.
+        val account = AuthSession.profile.value
+        val isPlayer = account?.role == com.dpa.sportpro.model.UserRole.PLAYER
         return PlayerTechnicalProfile(
-            fullName = "Mateo Silva Rossi",
-            category = "Sub-15",
-            dateOfBirth = "2010-04-12",
-            primaryPosition = "Mediocampista",
-            secondaryPosition = "Extremo",
-            dominantFoot = "Derecha (Diestro)",
-            heightMeters = 1.72,
-            weightKilograms = 65.0,
-            profilePhotoUri = "",
-            contactPhone = "+51 987 654 321",
-            emergencyContactName = "Juan Silva Rossi",
-            emergencyRelationship = "Padre",
-            emergencyPhone = "+51 912 345 678",
-            physicalHistory =
-                listOf(
-                    PhysicalMeasurement(
-                        heightMeters = 1.72,
-                        weightKilograms = 65.0,
-                        recordedAt = measuredAt,
-                    )
-                ),
+            fullName = if (isPlayer) listOfNotNull(account?.names, account?.lastNames).joinToString(" ") else "",
+            category = "",
+            dateOfBirth = if (isPlayer) account?.birthDateMillis?.let {
+                java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString()
+            }.orEmpty() else "",
+            primaryPosition = "", secondaryPosition = "", dominantFoot = "",
+            heightMeters = 0.0, weightKilograms = 0.0, profilePhotoUri = "",
+            contactPhone = "", emergencyContactName = "", emergencyRelationship = "",
+            emergencyPhone = "", physicalHistory = emptyList(),
         )
     }
 

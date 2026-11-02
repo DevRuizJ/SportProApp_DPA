@@ -157,7 +157,7 @@ fun PlayerTechnicalProfileScreen(
         ) { bitmap: Bitmap? ->
             if (bitmap != null) {
                 try {
-                    val photoFile = File(context.filesDir, "player_profile_photo.jpg")
+                    val photoFile = File(context.filesDir, com.dpa.sportpro.data.repository.LocalAccountScope.fileName("player_profile_photo", com.dpa.sportpro.data.repository.LocalAccountScope.uid()) + ".jpg")
                     photoFile.outputStream().use { output ->
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
                     }

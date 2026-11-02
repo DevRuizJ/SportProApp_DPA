@@ -11,7 +11,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class AcademyRepository(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences = LocalAccountScope.preferences(context, PREFERENCES_NAME)
 
     var academies by mutableStateOf(loadAcademies())
         private set

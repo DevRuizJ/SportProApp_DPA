@@ -1,0 +1,39 @@
+{
+  "score": 4,
+  "summary": "Prototipo validado con 30 pruebas de emulador para perfiles privados. El rol seleccionado es una preferencia de onboarding; NO concede permisos sobre academias. Las colecciones de negocio siguen cerradas y requieren ACL por academia antes de habilitarse.",
+  "findings": [
+    {
+      "check": "Business Logic vs. Rules",
+      "severity": "moderate",
+      "issue": "Solo están habilitados los perfiles de cuenta. La integración de permisos y datos de US-003 a US-019 sigue pendiente.",
+      "recommendation": "Implementar membresías verificadas por academia, vínculos PAD-JUG y operadores de partido; no usar selectedRole como permiso global."
+    },
+    {
+      "check": "Server managed fields",
+      "severity": "minor",
+      "issue": "La suspensión y corrección de perfiles requieren un entorno administrativo; no hay flujo de gestión conectado aún.",
+      "recommendation": "Añadir un flujo autorizado y probar que no permite reactivar o cambiar roles desde el cliente."
+    }
+  ],
+  "tested": [
+    "4 roles: creación válida y lectura propia",
+    "sin autenticación: lectura/escritura/listado rechazados",
+    "lectura/escritura/borrado ajenos rechazados",
+    "cambio de rol y estado rechazado",
+    "UID y correo falsificados rechazados",
+    "campos extra y campos obligatorios omitidos rechazados",
+    "tipos, longitudes y fechas inválidos rechazados",
+    "timestamps forjados rechazados",
+    "subcolecciones huérfanas rechazadas",
+    "rol ADM seleccionado no abre otras colecciones",
+    "correo verificado del token puede sincronizarse conservando UID y rol",
+    "correo no verificado, arbitrario o ajeno rechazado",
+    "sincronización no permite modificar UID, rol, estado ni timestamp",
+    "perfil suspendido no puede sincronizar correo"
+  ],
+  "notApplicable": [
+    "contador/reacción: no implementado",
+    "transiciones de partido: no implementadas en reglas",
+    "enlaces de imágenes: no forman parte del perfil privado"
+  ]
+}

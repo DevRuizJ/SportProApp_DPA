@@ -11,8 +11,8 @@ import com.dpa.sportpro.data.model.TacticalLineup
 import org.json.JSONArray
 import org.json.JSONObject
 
-class TacticalLineupRepository private constructor(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+class TacticalLineupRepository private constructor(context: Context, private val ownerUid: String) {
+    private val preferences = LocalAccountScope.preferences(context, PREFERENCES_NAME, ownerUid)
 
     var lineups by mutableStateOf(loadLineups())
         private set
@@ -117,13 +117,10 @@ class TacticalLineupRepository private constructor(context: Context) {
 
         @Volatile private var instance: TacticalLineupRepository? = null
 
-        fun getInstance(context: Context): TacticalLineupRepository =
-            instance
-                ?: synchronized(this) {
-                    instance
-                        ?: TacticalLineupRepository(context.applicationContext).also {
-                            instance = it
-                        }
-                }
+        fun getInstance(context: Context): TacticalLineupRepository = synchronized(this) {
+            val uid = LocalAccountScope.uid()
+            instance?.takeIf { it.ownerUid == uid }
+                ?: TacticalLineupRepository(context.applicationContext, uid).also { instance = it }
+        }
     }
 }

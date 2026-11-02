@@ -1,0 +1,10 @@
+rules_version = '2';
+// Initial lockdown while photo ownership and academy permissions are integrated.
+// No public reads or uploads. These rules are not yet functional photo permissions.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
