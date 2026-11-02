@@ -11,9 +11,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class AttendanceRepository(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences = LocalAccountScope.preferences(context, PREFERENCES_NAME)
 
-    val activePlayers: List<AttendancePlayer> = demoPlayers
+    val activePlayers: List<AttendancePlayer> = emptyList()
 
     var records by mutableStateOf(loadRecords())
         private set

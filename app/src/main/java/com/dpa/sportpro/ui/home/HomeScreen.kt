@@ -61,6 +61,7 @@ fun HomeScreen(
     onConvocationsClick: () -> Unit = {},
     onTacticalLineupClick: () -> Unit = {},
     onEventCatalogClick: () -> Unit = {},
+    onAccountClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
@@ -286,6 +287,13 @@ fun HomeScreen(
                     )
                 }
             }
+
+            FeatureCard(
+                "Mi cuenta",
+                "Cambiar correo o contraseña",
+                Icons.Default.Settings,
+                onClick = onAccountClick,
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

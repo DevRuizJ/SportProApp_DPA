@@ -19,6 +19,7 @@ data class RegisterUiState(
     val birthDateError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
+    val isSubmitting: Boolean = false,
     val registrationSuccess: Boolean = false,
     val successMessage: String? = null,
 )

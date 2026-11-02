@@ -3,6 +3,7 @@ package com.dpa.sportpro.ui.academy
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +47,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -60,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dpa.sportpro.data.model.Academy
 import com.dpa.sportpro.data.model.AcademyCategory
-import com.dpa.sportpro.data.repository.AcademyRepository
 import com.dpa.sportpro.ui.theme.CardBackground
 import com.dpa.sportpro.ui.theme.DarkBackground
 import com.dpa.sportpro.ui.theme.InputBorder
@@ -73,11 +80,16 @@ private data class CategoryDraft(val name: String = "", val coachName: String = 
 private val availableCoaches = listOf("Carlos Gómez")
 
 @Composable
-fun AcademiesScreen(onBackClick: () -> Unit) {
-    val context = LocalContext.current
-    val repository = remember(context) { AcademyRepository(context.applicationContext) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showCreateDialog by remember { mutableStateOf(false) }
+fun AcademiesScreen(onBackClick: () -> Unit, viewModel: AcademiesViewModel = viewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var showCreateDialog by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state.saved) {
+        if (state.saved) {
+            showCreateDialog = false
+            viewModel.clearResult()
+        }
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -130,7 +142,7 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(22.dp))
 
                 val filteredAcademies =
-                    repository.academies.filter {
+                    state.academies.filter {
                         it.name.contains(searchQuery, ignoreCase = true) ||
                             it.categories.any { category ->
                                 category.name.contains(searchQuery, ignoreCase = true)
@@ -175,7 +187,7 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
             }
 
             FloatingActionButton(
-                onClick = { showCreateDialog = true },
+                onClick = { viewModel.clearResult(); showCreateDialog = true },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = 24.dp),
                 containerColor = NeonGreen,
                 contentColor = DarkBackground,
@@ -188,11 +200,10 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
 
     if (showCreateDialog) {
         CreateAcademyDialog(
-            onDismiss = { showCreateDialog = false },
-            onSave = { name, crestUri, venue, description, categories ->
-                repository.addAcademy(name, crestUri, venue, description, categories)
-                showCreateDialog = false
-            },
+            saving = state.saving,
+            uploadError = state.error,
+            onDismiss = { if (!state.saving) { showCreateDialog = false; viewModel.clearResult() } },
+            onSave = viewModel::save,
         )
     }
 }
@@ -213,13 +224,15 @@ private fun AcademyCard(academy: Academy) {
                             .border(1.dp, InputBorder, RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.Shield,
-                        contentDescription =
-                            if (academy.crestUri.isNotBlank()) "Escudo seleccionado" else "Escudo",
-                        tint = NeonGreen,
-                        modifier = Modifier.size(30.dp),
-                    )
+                    if (academy.crestUri.isNotBlank()) {
+                        AsyncImage(
+                            model = academy.crestUri,
+                            contentDescription = "Escudo de ${academy.name}",
+                            modifier = Modifier.size(54.dp),
+                        )
+                    } else {
+                        Icon(Icons.Default.Shield, contentDescription = "Escudo", tint = NeonGreen)
+                    }
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 14.dp, end = 8.dp)) {
                     Text(
@@ -305,18 +318,25 @@ private fun AcademyCard(academy: Academy) {
 
 @Composable
 private fun CreateAcademyDialog(
+    saving: Boolean,
+    uploadError: String?,
     onDismiss: () -> Unit,
     onSave: (String, String, String, String, List<AcademyCategory>) -> Unit,
 ) {
     val context = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var venue by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var crestUri by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    var venue by rememberSaveable { mutableStateOf("") }
+    var description by rememberSaveable { mutableStateOf("") }
+    var crestUri by rememberSaveable { mutableStateOf("") }
     var formError by remember { mutableStateOf<String?>(null) }
-    val categories = remember { mutableStateListOf(CategoryDraft()) }
+    val categories = rememberSaveable(
+        saver = listSaver<SnapshotStateList<CategoryDraft>, String>(
+            save = { drafts -> drafts.flatMap { listOf(it.name, it.coachName) } },
+            restore = { values -> mutableStateListOf(*values.chunked(2).map { CategoryDraft(it[0], it[1]) }.toTypedArray()) },
+        ),
+    ) { mutableStateListOf(CategoryDraft()) }
     val imagePicker =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) {
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) {
             uri: Uri? ->
             if (uri != null) {
                 try {
@@ -351,10 +371,10 @@ private fun CreateAcademyDialog(
                 OutlinedButtonLike(
                     text = if (crestUri.isBlank()) "Seleccionar escudo" else "Escudo seleccionado",
                     icon = Icons.Default.Image,
-                    onClick = { imagePicker.launch(arrayOf("image/*")) },
+                    onClick = { if (!saving) imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 )
                 Text(
-                    "Modo de prueba: la imagen queda vinculada localmente. La carga a Cloud Storage requiere configurar Firebase.",
+                    "El escudo será público. Selecciona solo el logotipo de la academia, sin fotos ni datos personales de jugadores.",
                     color = TextMuted,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
@@ -388,6 +408,10 @@ private fun CreateAcademyDialog(
                     )
                 }
 
+                if (crestUri.isNotBlank()) {
+                    AsyncImage(model = crestUri, contentDescription = "Vista previa del escudo", modifier = Modifier.size(80.dp))
+                }
+                uploadError?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp) }
                 formError?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
                 }
@@ -414,12 +438,13 @@ private fun CreateAcademyDialog(
                             "Completa los datos, selecciona el escudo y asigna un DT a cada categoría."
                     }
                 },
+                enabled = !saving,
                 colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
             ) {
-                Text("Guardar academia", color = DarkBackground)
+                Text(if (saving) "Subiendo escudo…" else "Guardar academia", color = DarkBackground)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar", color = TextMuted) } },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !saving) { Text("Cancelar", color = TextMuted) } },
     )
 }
 

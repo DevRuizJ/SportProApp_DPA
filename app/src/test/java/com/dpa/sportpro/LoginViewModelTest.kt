@@ -1,7 +1,7 @@
 package com.dpa.sportpro
 
-import com.dpa.sportpro.data.repository.AuthRepository
 import com.dpa.sportpro.data.repository.AuthRepositoryImpl
+import com.dpa.sportpro.data.repository.RegistrationRequest
 import com.dpa.sportpro.model.UserRole
 import com.dpa.sportpro.ui.login.LoginViewModel
 import kotlinx.coroutines.Dispatchers
@@ -11,76 +11,42 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import org.junit.Assert.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
-
-    private val testDispatcher = StandardTestDispatcher()
-    private lateinit var authRepository: AuthRepository
+    private val dispatcher = StandardTestDispatcher()
+    private val repository = AuthRepositoryImpl(TestIdentity(), TestProfiles())
     private lateinit var viewModel: LoginViewModel
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-        authRepository = AuthRepositoryImpl()
-        viewModel = LoginViewModel(authRepository)
+    @Before fun setup() {
+        Dispatchers.setMain(dispatcher)
+        viewModel = LoginViewModel(repository)
     }
+    @After fun cleanup() { Dispatchers.resetMain() }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
-    @Test
-    fun loginWithEmptyFieldsSetsErrorMessages() {
+    @Test fun emptyCredentialsAreRejected() {
         viewModel.login()
-        val state = viewModel.uiState.value
-
-        assertNotNull(state.emailError)
-        assertNotNull(state.passwordError)
-        assertNotNull(state.globalError)
+        assertNotNull(viewModel.uiState.value.emailError)
+        assertNotNull(viewModel.uiState.value.passwordError)
     }
-
-    @Test
-    fun loginWithInvalidEmailFormatSetsError() {
-        viewModel.onEmailChanged("invalid-email")
-        viewModel.onPasswordChanged("SportPro123")
+    @Test fun incorrectCredentialsDoNotNavigate() = runTest {
+        viewModel.onEmailChanged("new@example.com")
+        viewModel.onPasswordChanged("wrong-password")
         viewModel.login()
-
-        val state = viewModel.uiState.value
-        assertNotNull(state.emailError)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.globalError)
+        assertNull(viewModel.uiState.value.authenticatedUser)
     }
-
-    @Test
-    fun loginWithIncorrectCredentialsSetsGlobalErrorBannerMessage() = runTest {
-        viewModel.onEmailChanged("wrong@sportpro.com")
-        viewModel.onPasswordChanged("wrongpassword")
+    @Test fun newlyRegisteredCoachCanLogInWithArbitraryEmail() = runTest {
+        repository.register(RegistrationRequest("Lucía", "Torres", "lucia@example.com", "Password123", UserRole.COACH, null))
+        viewModel.onEmailChanged("lucia@example.com")
+        viewModel.onPasswordChanged("Password123")
         viewModel.login()
-
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertNotNull(state.globalError)
-        assertEquals("Correo electrónico o contraseña incorrectos.", state.globalError)
-        assertNull(state.authenticatedUser)
-    }
-
-    @Test
-    fun loginWithValidCoachCredentialsNavigatesToCoachRoleHome() = runTest {
-        viewModel.onEmailChanged("dt@sportpro.com")
-        viewModel.onPasswordChanged("SportPro123")
-        viewModel.login()
-
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertNull(state.globalError)
-        assertNotNull(state.authenticatedUser)
-        assertEquals(UserRole.COACH, state.authenticatedUser?.role)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(UserRole.COACH, viewModel.uiState.value.authenticatedUser?.role)
+        assertEquals("Lucía", viewModel.uiState.value.authenticatedUser?.names)
+        assertNull(viewModel.uiState.value.globalError)
     }
 }

@@ -274,6 +274,7 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onNavigateToLogin
             // Main Action Button: "Crear cuenta"
             Button(
                 onClick = { viewModel.register() },
+                enabled = !uiState.isSubmitting,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors =

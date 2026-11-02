@@ -1,0 +1,56 @@
+rules_version = '2';
+// users/{uid}: private onboarding profile. uid immutable; email mirrors verified Auth; names <=80;
+// selectedRole is ONLY a navigation preference, never an academy authorization.
+// birthDateMillis nullable only for ADM/DT or imported users with a signed role.
+// isActive is server-managed after creation. timestamps are server timestamps.
+// All business collections remain closed until their scoped ACLs are implemented.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function importedRole(role) {
+      return request.auth.token.get('app_role', '') == role ||
+        request.auth.token.get('role', '') == role;
+    }
+    function validProfile(data, uid) {
+      return data.keys().hasAll(['uid', 'email', 'names', 'lastNames', 'selectedRole',
+          'birthDateMillis', 'isActive', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'names', 'lastNames', 'selectedRole',
+          'birthDateMillis', 'isActive', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid == uid && data.uid.size() <= 128 &&
+        data.email is string && data.email.size() <= 254 &&
+        data.email == request.auth.token.email &&
+        data.names is string && data.names.size() > 0 && data.names.size() <= 80 &&
+        data.lastNames is string && data.lastNames.size() <= 80 &&
+        (data.lastNames.size() > 0 || importedRole(data.selectedRole)) &&
+        data.selectedRole in ['ADM', 'DT', 'JUG', 'PAD'] &&
+        (data.birthDateMillis is int &&
+          data.birthDateMillis >= -2208988800000 &&
+          data.birthDateMillis <= request.time.toMillis() ||
+          data.birthDateMillis == null &&
+            (data.selectedRole in ['ADM', 'DT'] || importedRole(data.selectedRole))) &&
+        data.isActive is bool && data.isActive == true &&
+        data.createdAt is timestamp && data.createdAt == request.time &&
+        data.updatedAt is timestamp && data.updatedAt == request.time;
+    }
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create: if isOwner(uid) && validProfile(request.resource.data, uid);
+      // Only copy the verified Firebase Auth email; no role/identity/activation changes.
+      allow update: if isOwner(uid) && resource.data.isActive == true &&
+        request.auth.token.get('email_verified', false) == true &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'updatedAt']) &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() > 0 && request.resource.data.email.size() <= 254 &&
+        request.resource.data.email == request.auth.token.email &&
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
