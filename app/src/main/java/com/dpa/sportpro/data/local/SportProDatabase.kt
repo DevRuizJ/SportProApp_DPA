@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [PendingMatchEvent::class], version = 2, exportSchema = true)
+@Database(entities = [PendingMatchEvent::class], version = 3, exportSchema = true)
 abstract class SportProDatabase : RoomDatabase() {
     abstract fun pendingEvents(): PendingMatchEventDao
 
@@ -20,6 +20,12 @@ abstract class SportProDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE pending_match_events ADD COLUMN rejectedAtMillis INTEGER")
+            }
+        }
+
         @Volatile private var instance: SportProDatabase? = null
 
         fun getInstance(context: Context): SportProDatabase =
@@ -29,7 +35,7 @@ abstract class SportProDatabase : RoomDatabase() {
 
         fun builder(context: Context, name: String): Builder<SportProDatabase> =
             Room.databaseBuilder(context.applicationContext, SportProDatabase::class.java, name)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
         // No destructive fallback: a missing migration must fail instead of deleting data.
     }
 }

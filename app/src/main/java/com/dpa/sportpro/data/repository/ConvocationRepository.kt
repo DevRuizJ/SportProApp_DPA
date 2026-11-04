@@ -143,21 +143,7 @@ class ConvocationRepository private constructor(context: Context, private val ow
                 )
             }
         }
-        return loaded.map { convocation ->
-            if (
-                convocation.id != DEMO_CONVOCATION_ID ||
-                    convocation.confirmedCount >= MIN_DEMO_CONFIRMED
-            ) {
-                convocation
-            } else {
-                val existingIds = convocation.players.map { it.id }.toSet()
-                val missingPlayers =
-                    demoExtraPlayers
-                        .filter { it.id !in existingIds }
-                        .take(MIN_DEMO_CONFIRMED - convocation.confirmedCount)
-                convocation.copy(players = convocation.players + missingPlayers)
-            }
-        }
+        return loaded
     }
 
     private fun persist() {

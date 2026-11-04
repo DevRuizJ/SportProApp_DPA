@@ -7,6 +7,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PendingMatchEventDao {
+    @Query("SELECT * FROM pending_match_events WHERE ownerUid = :ownerUid AND confirmedAtMillis IS NULL AND rejectedAtMillis IS NULL ORDER BY createdAtMillis, operationId LIMIT 50")
+    suspend fun unsent(ownerUid: String): List<PendingMatchEvent>
+
+    @Query("UPDATE pending_match_events SET rejectedAtMillis = :time, lastError = :reason WHERE ownerUid = :ownerUid AND operationId = :id AND confirmedAtMillis IS NULL")
+    suspend fun reject(ownerUid: String, id: String, time: Long, reason: String): Int
+
     // ABORT on duplicate ID: never silently overwrite an unsent event.
     @Insert
     suspend fun insert(event: PendingMatchEvent)

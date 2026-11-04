@@ -15,4 +15,5 @@ data class PendingMatchEvent(
     @ColumnInfo(defaultValue = "0") val attemptCount: Int = 0,
     val lastError: String? = null,
     val confirmedAtMillis: Long? = null,
+    val rejectedAtMillis: Long? = null,
 )

@@ -1,11 +1,11 @@
 {
   "score": 4,
-  "summary": "Prototipo validado con 30 pruebas de emulador para perfiles privados. El rol seleccionado es una preferencia de onboarding; NO concede permisos sobre academias. Las colecciones de negocio siguen cerradas y requieren ACL por academia antes de habilitarse.",
+  "summary": "Prototipo validado con 41 pruebas de reglas para perfiles privados y partidos. El rol seleccionado NO concede privilegios. Partidos requieren claim firmado y ACL explícita; otros módulos de negocio permanecen cerrados hasta implementar membresías verificadas.",
   "findings": [
     {
       "check": "Business Logic vs. Rules",
       "severity": "moderate",
-      "issue": "Solo están habilitados los perfiles de cuenta. La integración de permisos y datos de US-003 a US-019 sigue pendiente.",
+      "issue": "Partidos y catálogo remoto ya tienen ACL. US-003 a US-009 permanecen locales sin relaciones remotas verificadas; comunidad, notificaciones e IA siguen pendientes.",
       "recommendation": "Implementar membresías verificadas por academia, vínculos PAD-JUG y operadores de partido; no usar selectedRole como permiso global."
     },
     {
@@ -29,11 +29,14 @@
     "correo verificado del token puede sincronizarse conservando UID y rol",
     "correo no verificado, arbitrario o ajeno rechazado",
     "sincronización no permite modificar UID, rol, estado ni timestamp",
-    "perfil suspendido no puede sincronizar correo"
+    "perfil suspendido no puede sincronizar correo",
+    "claim firmado y ACL de operador; espectadores y otros DT sin escritura",
+    "historial inmutable atómico, reenvío idempotente y conflicto entre operadores",
+    "transiciones de reloj y catálogo versionado, cierre al máximo de 240 minutos",
+    "listener de segundo cliente recibe gol, corrección y anulación"
   ],
   "notApplicable": [
     "contador/reacción: no implementado",
-    "transiciones de partido: no implementadas en reglas",
     "enlaces de imágenes: no forman parte del perfil privado"
   ]
 }
