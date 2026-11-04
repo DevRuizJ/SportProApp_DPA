@@ -27,6 +27,7 @@ class LoginViewModel(private val authRepository: AuthRepository = AuthRepository
 
     fun login() {
         val state = _uiState.value
+        if (state.isSubmitting) return
 
         var isValid = true
         var emailErr: String? = null
@@ -77,11 +78,11 @@ class LoginViewModel(private val authRepository: AuthRepository = AuthRepository
     }
 
     fun clearAuthenticationState() {
-        _uiState.update { it.copy(authenticatedUser = null) }
+        _uiState.update { it.copy(authenticatedUser = null, password = "") }
     }
 
     private fun isValidEmail(email: String): Boolean {
-        val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\$"
+        val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$"
         return email.matches(emailRegex.toRegex())
     }
 }

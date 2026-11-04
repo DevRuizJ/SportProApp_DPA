@@ -1,14 +1,20 @@
 package com.dpa.sportpro.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.dpa.sportpro.data.model.UserProfile
 import com.dpa.sportpro.model.UserRole
 import com.dpa.sportpro.ui.academy.AcademiesScreen
+import com.dpa.sportpro.ui.match.LiveMatchScreen
+import com.dpa.sportpro.ui.account.AccountSecurityScreen
 import com.dpa.sportpro.ui.attendance.AttendanceScreen
 import com.dpa.sportpro.ui.convocation.ConvocationScreen
 import com.dpa.sportpro.ui.events.EventCatalogScreen
@@ -25,10 +31,43 @@ fun SportProNavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route,
 ) {
+    val sessionViewModel: SessionViewModel = viewModel()
+    val session by sessionViewModel.profile.collectAsStateWithLifecycle()
+    val restoring by sessionViewModel.restoring.collectAsStateWithLifecycle()
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    fun mayOpen(target: String?): Boolean {
+        val user = session ?: return false
+        val editors = setOf(UserRole.ADMIN, UserRole.COACH)
+        val businessRoutes = setOf(Screen.Academies.route, Screen.PlayerProfile.route,
+            Screen.TrainingPlanner.route, Screen.MonthlyFees.route, Screen.Attendance.route,
+            Screen.Convocations.route, Screen.TacticalLineup.route, Screen.EventCatalog.route)
+        if (target in businessRoutes && user.role in editors && user.authorizedRole !in editors) return false
+        return when (target) {
+            Screen.Academies.route -> user.authorizedRole == UserRole.ADMIN
+            Screen.TrainingPlanner.route, Screen.Attendance.route, Screen.TacticalLineup.route,
+            Screen.EventCatalog.route -> user.authorizedRole in editors
+            else -> true
+        }
+    }
+    LaunchedEffect(restoring, session, route) {
+        if (!restoring && route != null) {
+            if (session == null && route !in setOf(Screen.Login.route, Screen.Register.route, Screen.PasswordRecovery.route)) {
+                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+            } else if (session != null && (route == Screen.Login.route || !mayOpen(route))) {
+                val user = requireNotNull(session)
+                navController.navigate(Screen.Home.createRoute(user.role.code, listOf(user.names, user.lastNames).filter { it.isNotBlank() }.joinToString(" "))) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
     NavHost(navController = navController, startDestination = startDestination) {
         composable(route = Screen.Login.route) {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                onForgotPasswordClick = { navController.navigate(Screen.PasswordRecovery.route) },
                 onNavigateToHome = { userProfile ->
                     val fullName =
                         listOf(userProfile.names, userProfile.lastNames)
@@ -36,8 +75,30 @@ fun SportProNavGraph(
                             .joinToString(" ")
                     val route = Screen.Home.createRoute(userProfile.role.code, fullName)
                     navController.navigate(route) {
+                        launchSingleTop = true
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                },
+            )
+        }
+
+        composable(route = Screen.PasswordRecovery.route) {
+            AccountSecurityScreen(
+                recovery = true,
+                onBack = { navController.popBackStack() },
+                onSignInAgain = { navController.popBackStack() },
+            )
+        }
+
+        composable(route = Screen.AccountSecurity.route) {
+            val user = session ?: return@composable
+            AccountSecurityScreen(
+                recovery = false,
+                currentEmail = user.email,
+                onBack = { navController.popBackStack() },
+                onSignInAgain = {
+                    sessionViewModel.signOut()
+                    navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
                 },
             )
         }
@@ -46,7 +107,13 @@ fun SportProNavGraph(
             RegisterScreen(onNavigateToLogin = { navController.popBackStack() })
         }
 
+        composable(route = Screen.LiveMatches.route) {
+            if (session == null) return@composable
+            LiveMatchScreen(onBack = { navController.popBackStack() })
+        }
+
         composable(route = Screen.Academies.route) {
+            if (!mayOpen(Screen.Academies.route)) return@composable
             AcademiesScreen(onBackClick = { navController.popBackStack() })
         }
 
@@ -58,12 +125,11 @@ fun SportProNavGraph(
                     navArgument("viewerName") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.PlayerProfile.route)) return@composable
             PlayerTechnicalProfileScreen(
                 viewerRole = viewerRole,
-                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                viewerName = listOfNotNull(session?.names, session?.lastNames).filter { it.isNotBlank() }.joinToString(" "),
                 onBackClick = { navController.popBackStack() },
             )
         }
@@ -76,12 +142,11 @@ fun SportProNavGraph(
                     navArgument("viewerName") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.TrainingPlanner.route)) return@composable
             TrainingPlannerScreen(
                 viewerRole = viewerRole,
-                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                viewerName = listOfNotNull(session?.names, session?.lastNames).filter { it.isNotBlank() }.joinToString(" "),
                 onBackClick = { navController.popBackStack() },
             )
         }
@@ -94,12 +159,11 @@ fun SportProNavGraph(
                     navArgument("viewerName") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.MonthlyFees.route)) return@composable
             MonthlyFeesScreen(
                 viewerRole = viewerRole,
-                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                viewerName = listOfNotNull(session?.names, session?.lastNames).filter { it.isNotBlank() }.joinToString(" "),
                 onBackClick = { navController.popBackStack() },
             )
         }
@@ -112,12 +176,11 @@ fun SportProNavGraph(
                     navArgument("viewerName") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.Attendance.route)) return@composable
             AttendanceScreen(
                 viewerRole = viewerRole,
-                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                viewerName = listOfNotNull(session?.names, session?.lastNames).filter { it.isNotBlank() }.joinToString(" "),
                 onBackClick = { navController.popBackStack() },
             )
         }
@@ -130,12 +193,11 @@ fun SportProNavGraph(
                     navArgument("viewerName") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.Convocations.route)) return@composable
             ConvocationScreen(
                 viewerRole = viewerRole,
-                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                viewerName = listOfNotNull(session?.names, session?.lastNames).filter { it.isNotBlank() }.joinToString(" "),
                 onBackClick = { navController.popBackStack() },
                 onLineupClick = { convocationId ->
                     navController.navigate(
@@ -153,9 +215,8 @@ fun SportProNavGraph(
                     navArgument("convocationId") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.TacticalLineup.route)) return@composable
             TacticalLineupScreen(
                 viewerRole = viewerRole,
                 convocationId = backStackEntry.arguments?.getString("convocationId"),
@@ -167,9 +228,8 @@ fun SportProNavGraph(
             route = Screen.EventCatalog.route,
             arguments = listOf(navArgument("viewerRole") { type = NavType.StringType }),
         ) { backStackEntry ->
-            val viewerRole =
-                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
-                    ?: UserRole.PLAYER
+            val viewerRole = session?.role ?: return@composable
+            if (!mayOpen(Screen.EventCatalog.route)) return@composable
             EventCatalogScreen(
                 viewerRole = viewerRole,
                 onBackClick = { navController.popBackStack() },
@@ -184,18 +244,8 @@ fun SportProNavGraph(
                     navArgument("userName") { type = NavType.StringType },
                 ),
         ) { backStackEntry ->
-            val roleCode = backStackEntry.arguments?.getString("roleCode") ?: "JUG"
-            val userName = backStackEntry.arguments?.getString("userName") ?: "Usuario"
-            val userRole = UserRole.fromCode(roleCode) ?: UserRole.PLAYER
-
-            val userProfile =
-                UserProfile(
-                    uid = "active_user",
-                    email = "$userName@sportpro.com",
-                    names = userName,
-                    lastNames = "",
-                    role = userRole,
-                )
+            val userProfile = session ?: return@composable
+            val userRole = userProfile.role
 
             HomeScreen(
                 userProfile = userProfile,
@@ -231,7 +281,10 @@ fun SportProNavGraph(
                 onEventCatalogClick = {
                     navController.navigate(Screen.EventCatalog.createRoute(userRole.code))
                 },
+                onLiveMatchesClick = { navController.navigate(Screen.LiveMatches.route) },
+                onAccountClick = { navController.navigate(Screen.AccountSecurity.route) },
                 onLogoutClick = {
+                    sessionViewModel.signOut()
                     navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
                 },
             )

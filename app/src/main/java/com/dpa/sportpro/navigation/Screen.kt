@@ -5,6 +5,12 @@ sealed class Screen(val route: String) {
 
     data object Register : Screen("register")
 
+    data object PasswordRecovery : Screen("password-recovery")
+
+    data object AccountSecurity : Screen("account-security")
+
+    data object LiveMatches : Screen("live-matches")
+
     data object Academies : Screen("academies")
 
     data object PlayerProfile : Screen("player-profile/{viewerRole}/{viewerName}") {
@@ -43,7 +49,7 @@ sealed class Screen(val route: String) {
 
     data object Home : Screen("home/{roleCode}/{userName}") {
         fun createRoute(roleCode: String, userName: String): String {
-            return "home/$roleCode/$userName"
+            return "home/$roleCode/${android.net.Uri.encode(userName)}"
         }
     }
 }

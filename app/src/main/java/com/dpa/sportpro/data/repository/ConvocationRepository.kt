@@ -13,8 +13,8 @@ import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONObject
 
-class ConvocationRepository private constructor(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+class ConvocationRepository private constructor(context: Context, private val ownerUid: String) {
+    private val preferences = LocalAccountScope.preferences(context, PREFERENCES_NAME, ownerUid)
 
     var convocations by mutableStateOf(loadConvocations())
         private set
@@ -97,7 +97,7 @@ class ConvocationRepository private constructor(context: Context) {
 
     private fun loadConvocations(): List<MatchConvocation> {
         val saved =
-            preferences.getString(CONVOCATIONS_KEY, null) ?: return listOf(demoConvocation())
+            preferences.getString(CONVOCATIONS_KEY, null) ?: return emptyList()
         val array = JSONArray(saved)
         val loaded = buildList {
             for (index in 0 until array.length()) {
@@ -143,21 +143,7 @@ class ConvocationRepository private constructor(context: Context) {
                 )
             }
         }
-        return loaded.map { convocation ->
-            if (
-                convocation.id != DEMO_CONVOCATION_ID ||
-                    convocation.confirmedCount >= MIN_DEMO_CONFIRMED
-            ) {
-                convocation
-            } else {
-                val existingIds = convocation.players.map { it.id }.toSet()
-                val missingPlayers =
-                    demoExtraPlayers
-                        .filter { it.id !in existingIds }
-                        .take(MIN_DEMO_CONFIRMED - convocation.confirmedCount)
-                convocation.copy(players = convocation.players + missingPlayers)
-            }
-        }
+        return loaded
     }
 
     private fun persist() {
@@ -373,11 +359,10 @@ class ConvocationRepository private constructor(context: Context) {
                 ),
             )
 
-        fun getInstance(context: Context): ConvocationRepository =
-            instance
-                ?: synchronized(this) {
-                    instance
-                        ?: ConvocationRepository(context.applicationContext).also { instance = it }
-                }
+        fun getInstance(context: Context): ConvocationRepository = synchronized(this) {
+            val uid = LocalAccountScope.uid()
+            instance?.takeIf { it.ownerUid == uid }
+                ?: ConvocationRepository(context.applicationContext, uid).also { instance = it }
+        }
     }
 }
