@@ -61,7 +61,53 @@ class OfflineDatabaseTest {
                     PendingMatchEvent("event-1", "dt-1", "match-1", "{\"elapsedSeconds\":91}", 1234L),
                     row,
                 )
-                assertEquals(2, db.openHelper.readableDatabase.version)
+                assertEquals(3, db.openHelper.readableDatabase.version)
+            }
+        } finally {
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test
+    fun migrationTwoToThreePreservesConfirmedAndPendingRows() = runBlocking {
+        val name = "migration-v2-${UUID.randomUUID()}"
+        try {
+            val schema = instrumentation.context.assets.open(
+                "com.dpa.sportpro.data.local.SportProDatabase/2.json",
+            ).bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
+            val file = context.getDatabasePath(name)
+            file.parentFile?.mkdirs()
+            SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
+                val entities = schema.getJSONArray("entities")
+                for (index in 0 until entities.length()) {
+                    val entity = entities.getJSONObject(index)
+                    db.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", entity.getString("tableName")))
+                    val indices = entity.optJSONArray("indices") ?: org.json.JSONArray()
+                    for (i in 0 until indices.length()) db.execSQL(indices.getJSONObject(i).getString("createSql").replace("\${TABLE_NAME}", entity.getString("tableName")))
+                }
+                val setup = schema.getJSONArray("setupQueries")
+                for (index in 0 until setup.length()) db.execSQL(setup.getString(index))
+                db.version = 2
+                db.execSQL("INSERT INTO pending_match_events (operationId, ownerUid, matchId, payloadJson, createdAtMillis, attemptCount, lastError, confirmedAtMillis) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf<Any?>("pending", "dt", "match", "original", 12L, 3, "offline", null))
+                db.execSQL("INSERT INTO pending_match_events (operationId, ownerUid, matchId, payloadJson, createdAtMillis, attemptCount, lastError, confirmedAtMillis) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf<Any?>("confirmed", "dt", "match", "confirmed-original", 13L, 1, null, 100L))
+            }
+            withDatabase(name) { db ->
+                val dao = db.pendingEvents()
+                assertEquals("original", dao.get("dt", "pending")?.payloadJson)
+                assertEquals(3, dao.get("dt", "pending")?.attemptCount)
+                assertNull(dao.get("dt", "pending")?.rejectedAtMillis)
+                assertEquals(100L, dao.get("dt", "confirmed")?.confirmedAtMillis)
+                assertEquals(listOf("pending"), dao.unsent("dt").map { it.operationId })
+                dao.reject("dt", "pending", 200L, "Revisión necesaria")
+            }
+            withDatabase(name) { db ->
+                assertTrue(db.pendingEvents().unsent("dt").isEmpty())
+                val retained = db.pendingEvents().observe("dt", "match").first().single()
+                assertEquals("original", retained.payloadJson)
+                assertEquals(200L, retained.rejectedAtMillis)
+                assertEquals(100L, db.pendingEvents().get("dt", "confirmed")?.confirmedAtMillis)
             }
         } finally {
             context.deleteDatabase(name)

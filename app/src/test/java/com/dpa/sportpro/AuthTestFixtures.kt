@@ -26,6 +26,7 @@ class TestProfiles : UserProfileGateway {
     val entries = mutableMapOf<String, UserProfile>()
     var failWrites = false
     override suspend fun get(uid: String) = entries[uid]
+    override suspend fun getCached(uid: String) = entries[uid]?.copy(offlineSession = true)
     override suspend fun synchronizeEmail(uid: String, email: String) {
         check(!failWrites)
         entries[uid] = requireNotNull(entries[uid]).copy(email = email)

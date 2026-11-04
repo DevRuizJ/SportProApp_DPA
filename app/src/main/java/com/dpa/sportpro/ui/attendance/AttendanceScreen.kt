@@ -91,7 +91,16 @@ fun AttendanceScreen(viewerRole: UserRole, viewerName: String, onBackClick: () -
         remember(context) { AttendanceRepository(context.applicationContext) }
     val sessionRepository =
         remember(context) { TrainingSessionRepository(context.applicationContext) }
-    val sessions = sessionRepository.sessions.ifEmpty { listOf(demoSession()) }
+    val sessions = sessionRepository.sessions
+    if (sessions.isEmpty()) {
+        Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("No hay entrenamientos guardados. Crea una sesión antes de registrar asistencia.", color = TextWhite)
+                TextButton(onClick = onBackClick) { Text("Volver", color = NeonGreen) }
+            }
+        }
+        return
+    }
     var selectedSessionId by remember { mutableStateOf(sessions.first().id) }
     var showSessionPicker by remember { mutableStateOf(false) }
     var savedMessage by remember { mutableStateOf<String?>(null) }

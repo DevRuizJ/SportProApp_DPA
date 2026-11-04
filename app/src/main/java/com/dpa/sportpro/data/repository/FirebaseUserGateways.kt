@@ -3,6 +3,9 @@ package com.dpa.sportpro.data.repository
 import com.dpa.sportpro.data.model.UserProfile
 import com.dpa.sportpro.model.UserRole
 import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseNetworkException
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.TimeoutCancellationException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
@@ -16,6 +19,7 @@ data class IdentityAccount(
     val email: String,
     val displayName: String = "",
     val trustedRole: UserRole? = null,
+    val offline: Boolean = false,
 )
 
 class AccountAlreadyExistsException : Exception()
@@ -28,6 +32,7 @@ interface IdentityGateway {
 
 interface UserProfileGateway {
     suspend fun get(uid: String): UserProfile?
+    suspend fun getCached(uid: String): UserProfile?
     suspend fun createIfAbsent(profile: UserProfile)
     suspend fun synchronizeEmail(uid: String, email: String)
 }
@@ -46,8 +51,17 @@ class FirebaseIdentityGateway : IdentityGateway {
 
     override suspend fun current(): IdentityAccount? {
         val user = auth.currentUser ?: return null
-        user.reload().await()
-        return auth.currentUser?.account()
+        return try {
+            withTimeout(5_000) {
+                user.reload().await()
+                auth.currentUser?.account()
+            }
+        } catch (error: Exception) {
+            if (error !is FirebaseNetworkException && error !is TimeoutCancellationException) throw error
+            // Only restore this SDK-authenticated UID. No new login or remote authorization offline.
+            if (auth.currentUser?.uid != user.uid) throw error
+            IdentityAccount(user.uid, user.email.orEmpty(), user.displayName.orEmpty(), offline = true)
+        }
     }
 
     override fun signOut() = auth.signOut()
@@ -68,8 +82,12 @@ object SportProFirestore {
 class FirestoreUserProfileGateway : UserProfileGateway {
     private val users get() = SportProFirestore.instance.collection("users")
 
-    override suspend fun get(uid: String): UserProfile? {
-        val document = users.document(uid).get(Source.SERVER).await()
+    override suspend fun get(uid: String): UserProfile? = read(uid, Source.SERVER)
+
+    override suspend fun getCached(uid: String): UserProfile? = read(uid, Source.CACHE)
+
+    private suspend fun read(uid: String, source: Source): UserProfile? {
+        val document = users.document(uid).get(source).await()
         if (!document.exists()) return null
         return UserProfile(
             uid = document.id,
@@ -79,6 +97,7 @@ class FirestoreUserProfileGateway : UserProfileGateway {
             role = requireNotNull(UserRole.fromCode(document.getString("selectedRole").orEmpty())),
             isActive = document.getBoolean("isActive") == true,
             birthDateMillis = document.getLong("birthDateMillis"),
+            offlineSession = source == Source.CACHE,
         )
     }
 

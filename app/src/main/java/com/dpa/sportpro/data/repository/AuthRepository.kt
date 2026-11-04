@@ -102,7 +102,7 @@ class AuthRepositoryImpl(
     }
 
     private suspend fun loadProfile(account: IdentityAccount): AuthResult {
-        var profile = profiles.get(account.uid)
+        var profile = if (account.offline) profiles.getCached(account.uid) else profiles.get(account.uid)
         if (profile == null && account.trustedRole != null) {
             // Compatibility for imported accounts: only a server-signed role, never email guessing.
             profile = UserProfile(
@@ -120,11 +120,12 @@ class AuthRepositoryImpl(
             signOut()
             return AuthResult.Error("Tu cuenta está suspendida. Contacta al administrador.")
         }
-        if (profile.email != account.email) {
+        if (!account.offline && profile.email != account.email) {
             // Auth is authoritative. Rules require the new verified email in the signed token.
             profiles.synchronizeEmail(account.uid, account.email)
             profile = profile.copy(email = account.email)
         }
+        profile = profile.copy(role = account.trustedRole ?: profile.role, authorizedRole = account.trustedRole)
         AuthSession.set(profile)
         return AuthResult.Success(profile)
     }

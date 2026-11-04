@@ -87,6 +87,39 @@ class AuthRepositoryTest {
         assertEquals(1, profiles.entries.size)
     }
 
+    @Test fun selectingAdminDoesNotGrantAuthorizedRole() = runTest {
+        val data = request(UserRole.ADMIN)
+        repository.register(data)
+        val logged = repository.login(data.email, data.password) as AuthResult.Success
+        assertEquals(UserRole.ADMIN, logged.userProfile.role)
+        assertNull(logged.userProfile.authorizedRole)
+    }
+
+    @Test fun signedRoleTakesPrecedenceWithoutRewritingRequestedRole() = runTest {
+        val data = request(UserRole.ADMIN)
+        repository.register(data)
+        val account = identity.accounts.getValue(data.email).first.copy(trustedRole = UserRole.COACH)
+        identity.accounts[data.email] = account to data.password
+        val logged = repository.login(data.email, data.password) as AuthResult.Success
+        assertEquals(UserRole.COACH, logged.userProfile.role)
+        assertEquals(UserRole.COACH, logged.userProfile.authorizedRole)
+        assertEquals(UserRole.ADMIN, profiles.entries[account.uid]?.role)
+    }
+
+    @Test fun offlineRestoreUsesSameUidCacheWithoutEmailWriteOrElevatedPermission() = runTest {
+        val data = request(UserRole.COACH)
+        repository.register(data)
+        repository.login(data.email, data.password)
+        identity.signedIn = identity.signedIn!!.copy(email = "changed@example.com", offline = true, trustedRole = null)
+        profiles.failWrites = true
+        val restored = repository.restoreSession() as AuthResult.Success
+        assertTrue(restored.userProfile.offlineSession)
+        assertNull(restored.userProfile.authorizedRole)
+        assertEquals(data.email, profiles.entries[restored.userProfile.uid]?.email)
+        identity.signedIn = identity.signedIn!!.copy(uid = "another-uid")
+        assertTrue(repository.restoreSession() is AuthResult.Error)
+    }
+
     @Test fun futureBirthDateDoesNotCreateAccount() = runTest {
         assertTrue(repository.register(request(UserRole.PLAYER).copy(birthDateMillis = Long.MAX_VALUE)) is AuthResult.Error)
         assertTrue(identity.accounts.isEmpty())
