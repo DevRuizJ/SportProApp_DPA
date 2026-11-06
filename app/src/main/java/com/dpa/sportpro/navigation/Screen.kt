@@ -11,6 +11,8 @@ sealed class Screen(val route: String) {
 
     data object LiveMatches : Screen("live-matches")
 
+    data object ClubAccess : Screen("club-access")
+
     data object Academies : Screen("academies")
 
     data object PlayerProfile : Screen("player-profile/{viewerRole}/{viewerName}") {
