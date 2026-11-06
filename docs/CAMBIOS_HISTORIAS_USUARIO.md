@@ -1,4 +1,18 @@
 # Cambios verificables de criterios
+
+## Desarrollo de clubes y vínculos — 05/11/2026
+- US001/002: solicitud por club en Inicio → Mis clubes y solicitudes. Estados pendientes, aprobados, rechazados y revocados, decisión con responsable/fecha/motivo. Los permisos efectivos nuevos se consultan en clubAccess; selectedRole y ADM firmado no conceden autoridad global.
+- ADM de club aprueba DT/JUG/PAD exclusivamente de su club. Solo plataforma decide solicitudes ADM. Ningún usuario decide su propia solicitud. No se sincronizan estos permisos con claims de Supabase.
+- US003: clubes remotos, equipos/categorías y asignación de DT aprobado; cada DT solo consulta planteles de equipos asignados. Fichas existentes se incorporan/retiran sin borrar ni crear cuentas Auth.
+- US004: múltiples vínculos PAD–ficha deportiva; invitación aleatoria de 128 bits, 24 horas, consumo atómico único y aprobación posterior. Revocación conserva historial de decisión. Solo apoderado aprobado obtiene la ficha mínima del jugador.
+- Inicialización única: propietario IAM abre Firestore → base sportpro-live → colección platformAuthorities → documento con UID del responsable → campo booleano active=true. Android no puede crear ni modificar esta colección. También se admite claim firmado platform_admin=true. No usar ADM como superadministrador. Luego actualizar Mis clubes para crear clubes y aprobar solicitudes desde la app.
+- Compatibilidad: colecciones nuevas no migran ni eliminan los datos locales anteriores. Room permanece en versión 3 sin cambios. Las antiguas pantallas locales aún no consumen estas relaciones.
+- Pendiente: vincular fichas a cuentas JUG verificadas; identidad deportiva entre clubes; integrar entrenamientos, cuotas, convocatorias, alineaciones y partidos con el plantel remoto. No exponer esos módulos a padres por nombre o identidad asumida.
+- Verificación de este grupo: compilación Kotlin y validación sintáctica de reglas. No se ejecutaron escenarios funcionales ni emuladores. GitHub Project no actualizado.
+- Revisión estática de permisos: autoaprobación, ADM→plataforma, aprobación cruzada entre clubes, alteración de campos de identidad, consumo de invitación sin vínculo atómico, reutilización, lectura de fichas sin parentesco y edición de historial son denegados por las condiciones implementadas; pendientes de ejecución automatizada.
+
+## Revisión anterior
+
 Revisión 04/11/2026. Fuente: backlog completo entregado por el usuario. No se modificaron responsables, puntos, numeración ni objetivos. GitHub Project sin actualización comprobada; este documento está listo para trasladarse.
 
 | US | Criterio original / ambigüedad | Criterio corregido o añadido | Implementación y verificación |

@@ -107,6 +107,11 @@ fun SportProNavGraph(
             RegisterScreen(onNavigateToLogin = { navController.popBackStack() })
         }
 
+        composable(route = Screen.ClubAccess.route) {
+            if (session == null) return@composable
+            com.dpa.sportpro.ui.access.ClubAccessScreen(onBack = { navController.popBackStack() })
+        }
+
         composable(route = Screen.LiveMatches.route) {
             if (session == null) return@composable
             LiveMatchScreen(onBack = { navController.popBackStack() })
@@ -282,6 +287,7 @@ fun SportProNavGraph(
                     navController.navigate(Screen.EventCatalog.createRoute(userRole.code))
                 },
                 onLiveMatchesClick = { navController.navigate(Screen.LiveMatches.route) },
+                onClubAccessClick = { navController.navigate(Screen.ClubAccess.route) },
                 onAccountClick = { navController.navigate(Screen.AccountSecurity.route) },
                 onLogoutClick = {
                     sessionViewModel.signOut()

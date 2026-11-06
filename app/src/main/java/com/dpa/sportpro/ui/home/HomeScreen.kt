@@ -62,6 +62,7 @@ fun HomeScreen(
     onTacticalLineupClick: () -> Unit = {},
     onEventCatalogClick: () -> Unit = {},
     onLiveMatchesClick: () -> Unit = {},
+    onClubAccessClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
 ) {
@@ -169,13 +170,19 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             FeatureCard(
+                if (userProfile.role == UserRole.PARENT) "Mis hijos y clubes" else "Mis clubes y solicitudes",
+                "Vinculaciones, permisos y administración del club",
+                Icons.Default.Group,
+                onClick = onClubAccessClick,
+            )
+            FeatureCard(
                 "Partidos en vivo",
                 "Registrar eventos y seguir el marcador",
                 Icons.Default.SportsSoccer,
                 onClick = onLiveMatchesClick,
             )
             if (userProfile.role in setOf(UserRole.ADMIN, UserRole.COACH) && userProfile.authorizedRole == null) {
-                Text("Rol solicitado pendiente de aprobación. Puedes gestionar tu cuenta y seguir partidos autorizados.", color = TextMuted)
+                Text("Gestiona tu solicitud y consulta tus permisos en Mis clubes y solicitudes. Los permisos se conceden por club.", color = TextMuted)
             } else when (userProfile.role) {
                 UserRole.COACH -> {
                     FeatureCard(
@@ -244,7 +251,7 @@ fun HomeScreen(
                         "Mis Hijos Vinculados",
                         "Consulta de jugadores vinculados",
                         Icons.Default.Group,
-                        onClick = onPlayerProfileClick,
+                        onClick = onClubAccessClick,
                     )
                     FeatureCard(
                         "Autorizaciones y Cuotas",
@@ -261,9 +268,10 @@ fun HomeScreen(
                 }
                 UserRole.ADMIN -> {
                     FeatureCard(
-                        "Gestión Global de Usuarios",
-                        "Aprobación de cuentas y asignación de roles",
+                        "Administración del club",
+                        "Solicitudes y vínculos de tus clubes autorizados",
                         Icons.Default.Group,
+                        onClick = onClubAccessClick,
                     )
                     FeatureCard(
                         "Configuración de Equipos",
