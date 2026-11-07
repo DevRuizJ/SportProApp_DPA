@@ -29,11 +29,32 @@ class AuthRepositoryImpl : AuthRepository {
     private val mockUsers =
         mapOf(
             "dt@sportpro.com" to
-                UserProfile("dt_1", "dt@sportpro.com", "Carlos", "Gómez", UserRole.COACH),
+                UserProfile(
+                    "dt_1",
+                    "dt@sportpro.com",
+                    "Carlos",
+                    "Gómez",
+                    UserRole.COACH,
+                    isVerified = true,
+                ),
             "jugador@sportpro.com" to
-                UserProfile("jug_1", "jugador@sportpro.com", "Mateo", "Silva", UserRole.PLAYER),
+                UserProfile(
+                    "jug_1",
+                    "jugador@sportpro.com",
+                    "Mateo",
+                    "Silva",
+                    UserRole.PLAYER,
+                    isVerified = true,
+                ),
             "padre@sportpro.com" to
-                UserProfile("pad_1", "padre@sportpro.com", "Juan", "Silva", UserRole.PARENT),
+                UserProfile(
+                    "pad_1",
+                    "padre@sportpro.com",
+                    "Juan",
+                    "Silva",
+                    UserRole.PARENT,
+                    isVerified = true,
+                ),
             "admin@sportpro.com" to
                 UserProfile("admin_1", "admin@sportpro.com", "Admin", "SportPro", UserRole.ADMIN),
         )
@@ -52,6 +73,7 @@ class AuthRepositoryImpl : AuthRepository {
                             names = firebaseUser.displayName ?: "Usuario",
                             lastNames = "",
                             role = role,
+                            isVerified = firebaseUser.isEmailVerified,
                         )
                     )
                 }

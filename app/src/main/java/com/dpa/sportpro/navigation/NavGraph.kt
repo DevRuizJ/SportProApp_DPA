@@ -9,16 +9,21 @@ import androidx.navigation.navArgument
 import com.dpa.sportpro.data.model.UserProfile
 import com.dpa.sportpro.model.UserRole
 import com.dpa.sportpro.ui.academy.AcademiesScreen
+import com.dpa.sportpro.ui.announcements.AnnouncementsScreen
 import com.dpa.sportpro.ui.attendance.AttendanceScreen
+import com.dpa.sportpro.ui.chronicle.MatchChronicleScreen
 import com.dpa.sportpro.ui.convocation.ConvocationScreen
 import com.dpa.sportpro.ui.events.EventCatalogScreen
 import com.dpa.sportpro.ui.fees.MonthlyFeesScreen
 import com.dpa.sportpro.ui.home.HomeScreen
 import com.dpa.sportpro.ui.lineup.TacticalLineupScreen
 import com.dpa.sportpro.ui.login.LoginScreen
+import com.dpa.sportpro.ui.moderation.ModerationScreen
 import com.dpa.sportpro.ui.player.PlayerTechnicalProfileScreen
 import com.dpa.sportpro.ui.register.RegisterScreen
+import com.dpa.sportpro.ui.statistics.MatchStatisticsScreen
 import com.dpa.sportpro.ui.training.TrainingPlannerScreen
+import com.dpa.sportpro.ui.tryouts.TryoutsScreen
 
 @Composable
 fun SportProNavGraph(
@@ -34,7 +39,13 @@ fun SportProNavGraph(
                         listOf(userProfile.names, userProfile.lastNames)
                             .filter { it.isNotBlank() }
                             .joinToString(" ")
-                    val route = Screen.Home.createRoute(userProfile.role.code, fullName)
+                    val route =
+                        Screen.Home.createRoute(
+                            userProfile.role.code,
+                            userProfile.uid,
+                            fullName,
+                            userProfile.isVerified,
+                        )
                     navController.navigate(route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -176,25 +187,137 @@ fun SportProNavGraph(
             )
         }
 
+        composable(route = Screen.MatchEvents.route) {
+            com.dpa.sportpro.ui.matchevents.MatchEventsScreen()
+        }
+
+        composable(route = Screen.MatchLiveFeed.route) {
+            com.dpa.sportpro.ui.livefeed.MatchLiveFeedScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Screen.MatchStatistics.route) {
+            MatchStatisticsScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screen.MatchChronicle.route,
+            arguments = listOf(navArgument("viewerRole") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val viewerRole =
+                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole").orEmpty())
+                    ?: UserRole.PLAYER
+            MatchChronicleScreen(
+                viewerRole = viewerRole,
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = Screen.Announcements.route,
+            arguments =
+                listOf(
+                    navArgument("viewerRole") { type = NavType.StringType },
+                    navArgument("viewerId") { type = NavType.StringType },
+                    navArgument("viewerName") { type = NavType.StringType },
+                ),
+        ) { backStackEntry ->
+            val viewerRole =
+                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole") ?: "")
+                    ?: UserRole.PLAYER
+            AnnouncementsScreen(
+                viewerRole = viewerRole,
+                viewerId = backStackEntry.arguments?.getString("viewerId").orEmpty(),
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = Screen.Community.route,
+            arguments =
+                listOf(
+                    navArgument("roleCode") { type = NavType.StringType },
+                    navArgument("userId") { type = NavType.StringType },
+                    navArgument("userName") { type = NavType.StringType },
+                    navArgument("verified") { type = NavType.BoolType },
+                ),
+        ) { backStackEntry ->
+            val role =
+                UserRole.fromCode(backStackEntry.arguments?.getString("roleCode").orEmpty())
+                    ?: UserRole.PLAYER
+            com.dpa.sportpro.ui.community.CommunityScreen(
+                userProfile =
+                    UserProfile(
+                        uid = backStackEntry.arguments?.getString("userId").orEmpty(),
+                        email = "",
+                        names = backStackEntry.arguments?.getString("userName").orEmpty(),
+                        lastNames = "",
+                        role = role,
+                        isVerified = backStackEntry.arguments?.getBoolean("verified") == true,
+                    ),
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = Screen.Tryouts.route,
+            arguments =
+                listOf(
+                    navArgument("viewerRole") { type = NavType.StringType },
+                    navArgument("viewerId") { type = NavType.StringType },
+                    navArgument("viewerName") { type = NavType.StringType },
+                ),
+        ) { backStackEntry ->
+            val viewerRole =
+                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole").orEmpty())
+                    ?: UserRole.PLAYER
+            TryoutsScreen(
+                viewerRole = viewerRole,
+                viewerId = backStackEntry.arguments?.getString("viewerId").orEmpty(),
+                viewerName = backStackEntry.arguments?.getString("viewerName").orEmpty(),
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = Screen.Moderation.route,
+            arguments = listOf(navArgument("viewerRole") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val viewerRole =
+                UserRole.fromCode(backStackEntry.arguments?.getString("viewerRole").orEmpty())
+                    ?: UserRole.PLAYER
+            ModerationScreen(
+                viewerRole = viewerRole,
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
         composable(
             route = Screen.Home.route,
             arguments =
                 listOf(
                     navArgument("roleCode") { type = NavType.StringType },
+                    navArgument("userId") { type = NavType.StringType },
                     navArgument("userName") { type = NavType.StringType },
+                    navArgument("verified") { type = NavType.BoolType },
                 ),
         ) { backStackEntry ->
             val roleCode = backStackEntry.arguments?.getString("roleCode") ?: "JUG"
+            val userId = backStackEntry.arguments?.getString("userId").orEmpty()
             val userName = backStackEntry.arguments?.getString("userName") ?: "Usuario"
+            val isVerified = backStackEntry.arguments?.getBoolean("verified") == true
             val userRole = UserRole.fromCode(roleCode) ?: UserRole.PLAYER
 
             val userProfile =
                 UserProfile(
-                    uid = "active_user",
+                    uid = userId,
                     email = "$userName@sportpro.com",
                     names = userName,
                     lastNames = "",
                     role = userRole,
+                    isVerified = isVerified,
                 )
 
             HomeScreen(
@@ -230,6 +353,43 @@ fun SportProNavGraph(
                 },
                 onEventCatalogClick = {
                     navController.navigate(Screen.EventCatalog.createRoute(userRole.code))
+                },
+                onMatchEventsClick = { navController.navigate(Screen.MatchEvents.route) },
+                onMatchLiveFeedClick = { navController.navigate(Screen.MatchLiveFeed.route) },
+                onStatisticsClick = { navController.navigate(Screen.MatchStatistics.route) },
+                onMatchChronicleClick = {
+                    navController.navigate(Screen.MatchChronicle.createRoute(userRole.code))
+                },
+                onAnnouncementsClick = {
+                    navController.navigate(
+                        Screen.Announcements.createRoute(
+                            userRole.code,
+                            userProfile.uid,
+                            userProfile.names,
+                        )
+                    )
+                },
+                onCommunityClick = {
+                    navController.navigate(
+                        Screen.Community.createRoute(
+                            userProfile.role.code,
+                            userProfile.uid,
+                            userProfile.names,
+                            userProfile.isVerified,
+                        )
+                    )
+                },
+                onTryoutsClick = {
+                    navController.navigate(
+                        Screen.Tryouts.createRoute(
+                            userRole.code,
+                            userProfile.uid,
+                            userProfile.names,
+                        )
+                    )
+                },
+                onModerationClick = {
+                    navController.navigate(Screen.Moderation.createRoute(userRole.code))
                 },
                 onLogoutClick = {
                     navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }

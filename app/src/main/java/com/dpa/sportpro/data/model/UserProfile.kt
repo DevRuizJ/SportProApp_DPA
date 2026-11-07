@@ -9,4 +9,5 @@ data class UserProfile(
     val lastNames: String,
     val role: UserRole,
     val isActive: Boolean = true,
+    val isVerified: Boolean = false,
 )

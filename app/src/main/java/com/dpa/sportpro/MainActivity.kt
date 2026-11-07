@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.dpa.sportpro.data.repository.MatchEventsRepositoryImpl
 import com.dpa.sportpro.navigation.SportProNavGraph
 import com.dpa.sportpro.ui.theme.DarkBackground
 import com.dpa.sportpro.ui.theme.SportProAppTheme
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        MatchEventsRepositoryImpl.initialize(applicationContext)
         setContent {
             SportProAppTheme {
                 val navController = rememberNavController()

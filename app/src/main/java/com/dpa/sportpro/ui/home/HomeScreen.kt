@@ -19,10 +19,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Button
@@ -61,6 +63,14 @@ fun HomeScreen(
     onConvocationsClick: () -> Unit = {},
     onTacticalLineupClick: () -> Unit = {},
     onEventCatalogClick: () -> Unit = {},
+    onMatchEventsClick: () -> Unit = {},
+    onMatchLiveFeedClick: () -> Unit = {},
+    onStatisticsClick: () -> Unit = {},
+    onMatchChronicleClick: () -> Unit = {},
+    onAnnouncementsClick: () -> Unit = {},
+    onCommunityClick: () -> Unit = {},
+    onTryoutsClick: () -> Unit = {},
+    onModerationClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
@@ -169,6 +179,12 @@ fun HomeScreen(
             when (userProfile.role) {
                 UserRole.COACH -> {
                     FeatureCard(
+                        "Bitácora de Partido en Vivo",
+                        "Registra goles, tarjetas y eventos minuto a minuto",
+                        Icons.Default.SportsSoccer,
+                        onClick = onMatchEventsClick,
+                    )
+                    FeatureCard(
                         "Gestión de Plantilla",
                         "Control de asistencias y ficha técnica",
                         Icons.Default.Group,
@@ -204,12 +220,61 @@ fun HomeScreen(
                         Icons.Default.Badge,
                         onClick = onEventCatalogClick,
                     )
+                    FeatureCard(
+                        "Estadísticas del equipo",
+                        "Resultados y rendimiento acumulado del torneo",
+                        Icons.Default.SportsSoccer,
+                        onClick = onStatisticsClick,
+                    )
+                    FeatureCard(
+                        "Resumen IA del partido",
+                        "Genera una crónica pendiente de aprobación",
+                        Icons.Default.AutoAwesome,
+                        onClick = onMatchChronicleClick,
+                    )
+                    FeatureCard(
+                        "Anuncios oficiales",
+                        "Publica cambios y avisos para tus categorías",
+                        Icons.Default.Badge,
+                        onClick = onAnnouncementsClick,
+                    )
+                    FeatureCard(
+                        "Comunidad",
+                        "Comparte momentos y noticias del equipo",
+                        Icons.Default.Group,
+                        onClick = onCommunityClick,
+                    )
+                    FeatureCard(
+                        "Tryouts abiertos",
+                        "Publica pruebas deportivas para nuevos talentos",
+                        Icons.Default.SportsSoccer,
+                        onClick = onTryoutsClick,
+                    )
                 }
                 UserRole.PLAYER -> {
+                    FeatureCard(
+                        "Marcador y Eventos en Vivo",
+                        "Sigue el partido en tiempo real",
+                        Icons.Default.SportsSoccer,
+                        onClick = onMatchLiveFeedClick,
+                    )
                     FeatureCard(
                         "Mis Estadísticas",
                         "Rendimiento, minutos y goles de la temporada",
                         Icons.Default.SportsSoccer,
+                        onClick = onStatisticsClick,
+                    )
+                    FeatureCard(
+                        "Anuncios oficiales",
+                        "Consulta avisos de tus categorías suscritas",
+                        Icons.Default.Badge,
+                        onClick = onAnnouncementsClick,
+                    )
+                    FeatureCard(
+                        "Comunidad",
+                        "Comparte fotos, comentarios y reacciones",
+                        Icons.Default.Group,
+                        onClick = onCommunityClick,
                     )
                     FeatureCard(
                         "Convocatorias",
@@ -228,8 +293,38 @@ fun HomeScreen(
                         Icons.Default.CalendarMonth,
                         onClick = onMonthlyFeesClick,
                     )
+                    FeatureCard(
+                        "Tryouts abiertos",
+                        "Encuentra pruebas deportivas y postula a academias",
+                        Icons.Default.SportsSoccer,
+                        onClick = onTryoutsClick,
+                    )
                 }
                 UserRole.PARENT -> {
+                    FeatureCard(
+                        "Marcador y Eventos en Vivo",
+                        "Sigue el partido de tu hijo en tiempo real",
+                        Icons.Default.SportsSoccer,
+                        onClick = onMatchLiveFeedClick,
+                    )
+                    FeatureCard(
+                        "Estadísticas del jugador",
+                        "Consulta resultados y rendimiento acumulado",
+                        Icons.Default.SportsSoccer,
+                        onClick = onStatisticsClick,
+                    )
+                    FeatureCard(
+                        "Anuncios oficiales",
+                        "Mantente al día con comunicados del club",
+                        Icons.Default.Badge,
+                        onClick = onAnnouncementsClick,
+                    )
+                    FeatureCard(
+                        "Comunidad",
+                        "Comparte y comenta los momentos del equipo",
+                        Icons.Default.Group,
+                        onClick = onCommunityClick,
+                    )
                     FeatureCard(
                         "Mis Hijos Vinculados",
                         "Ficha deportiva de Mateo Silva Rossi",
@@ -250,6 +345,12 @@ fun HomeScreen(
                     )
                 }
                 UserRole.ADMIN -> {
+                    FeatureCard(
+                        "Moderación de contenido",
+                        "Revisa reportes y protege la comunidad",
+                        Icons.Default.Security,
+                        onClick = onModerationClick,
+                    )
                     FeatureCard(
                         "Gestión Global de Usuarios",
                         "Aprobación de cuentas y asignación de roles",
@@ -283,6 +384,24 @@ fun HomeScreen(
                         "Reportes del Club",
                         "Métricas financieras y deportivas",
                         Icons.Default.Badge,
+                    )
+                    FeatureCard(
+                        "Anuncios oficiales",
+                        "Publica comunicados para padres y jugadores",
+                        Icons.Default.Badge,
+                        onClick = onAnnouncementsClick,
+                    )
+                    FeatureCard(
+                        "Comunidad",
+                        "Consulta publicaciones y comentarios reportados",
+                        Icons.Default.Group,
+                        onClick = onCommunityClick,
+                    )
+                    FeatureCard(
+                        "Tryouts abiertos",
+                        "Publica pruebas deportivas para nuevos talentos",
+                        Icons.Default.SportsSoccer,
+                        onClick = onTryoutsClick,
                     )
                 }
             }

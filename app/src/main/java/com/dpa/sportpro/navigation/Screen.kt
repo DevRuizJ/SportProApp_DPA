@@ -41,9 +41,51 @@ sealed class Screen(val route: String) {
         fun createRoute(viewerRole: String): String = "event-catalog/$viewerRole"
     }
 
-    data object Home : Screen("home/{roleCode}/{userName}") {
-        fun createRoute(roleCode: String, userName: String): String {
-            return "home/$roleCode/$userName"
-        }
+    data object MatchEvents : Screen("match-events")
+
+    data object MatchLiveFeed : Screen("match-live-feed")
+
+    data object MatchStatistics : Screen("match-statistics")
+
+    data object MatchChronicle : Screen("match-chronicle/{viewerRole}") {
+        fun createRoute(viewerRole: String): String = "match-chronicle/$viewerRole"
+    }
+
+    data object Announcements : Screen("announcements/{viewerRole}/{viewerId}/{viewerName}") {
+        fun createRoute(viewerRole: String, viewerId: String, viewerName: String): String =
+            "announcements/$viewerRole/${android.net.Uri.encode(viewerId)}/" +
+                android.net.Uri.encode(viewerName)
+    }
+
+    data object Community : Screen("community/{roleCode}/{userId}/{userName}/{verified}") {
+        fun createRoute(
+            roleCode: String,
+            userId: String,
+            userName: String,
+            verified: Boolean,
+        ): String =
+            "community/$roleCode/${android.net.Uri.encode(userId)}/" +
+                "${android.net.Uri.encode(userName)}/$verified"
+    }
+
+    data object Tryouts : Screen("tryouts/{viewerRole}/{viewerId}/{viewerName}") {
+        fun createRoute(viewerRole: String, viewerId: String, viewerName: String): String =
+            "tryouts/$viewerRole/${android.net.Uri.encode(viewerId)}/" +
+                android.net.Uri.encode(viewerName)
+    }
+
+    data object Moderation : Screen("moderation/{viewerRole}") {
+        fun createRoute(viewerRole: String): String = "moderation/$viewerRole"
+    }
+
+    data object Home : Screen("home/{roleCode}/{userId}/{userName}/{verified}") {
+        fun createRoute(
+            roleCode: String,
+            userId: String,
+            userName: String,
+            verified: Boolean,
+        ): String =
+            "home/$roleCode/${android.net.Uri.encode(userId)}/" +
+                "${android.net.Uri.encode(userName)}/$verified"
     }
 }
