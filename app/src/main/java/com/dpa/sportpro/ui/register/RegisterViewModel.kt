@@ -1,6 +1,12 @@
 package com.dpa.sportpro.ui.register
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.dpa.sportpro.data.repository.AuthRepository
+import com.dpa.sportpro.data.repository.AuthRepositoryImpl
+import com.dpa.sportpro.data.repository.AuthResult
+import com.dpa.sportpro.data.repository.RegistrationRequest
+import kotlinx.coroutines.launch
 import com.dpa.sportpro.model.UserRole
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -11,7 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(private val authRepository: AuthRepository = AuthRepositoryImpl()) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
@@ -73,6 +79,7 @@ class RegisterViewModel : ViewModel() {
 
     fun register() {
         val state = _uiState.value
+        if (state.isSubmitting || state.registrationSuccess) return
 
         var isValid = true
 
@@ -107,6 +114,10 @@ class RegisterViewModel : ViewModel() {
             if (state.selectedRole?.requiresBirthDate == true && state.birthDate.isBlank()) {
                 isValid = false
                 "Debe seleccionar su fecha de nacimiento."
+            } else if (state.birthDateMillis != null &&
+                (state.birthDateMillis > System.currentTimeMillis() || state.birthDateMillis < -2208988800000L)) {
+                isValid = false
+                "Selecciona una fecha de nacimiento válida."
             } else null
 
         val passwordError =
@@ -149,7 +160,25 @@ class RegisterViewModel : ViewModel() {
             val successMsg =
                 "¡Registro exitoso para $roleInfo! Bienvenido(a), ${state.names}.$minorDetail"
 
-            _uiState.update { it.copy(registrationSuccess = true, successMessage = successMsg) }
+            _uiState.update { it.copy(isSubmitting = true, emailError = null) }
+            viewModelScope.launch {
+                try {
+                    val result = authRepository.register(
+                        RegistrationRequest(
+                            state.names, state.lastNames, state.email, state.password,
+                            requireNotNull(state.selectedRole), state.birthDateMillis,
+                        )
+                    )
+                    when (result) {
+                        is AuthResult.Success -> _uiState.update {
+                            it.copy(registrationSuccess = true, successMessage = successMsg, password = "", confirmPassword = "")
+                        }
+                        is AuthResult.Error -> _uiState.update { it.copy(emailError = result.message) }
+                    }
+                } finally {
+                    _uiState.update { it.copy(isSubmitting = false) }
+                }
+            }
         }
     }
 
@@ -158,7 +187,7 @@ class RegisterViewModel : ViewModel() {
     }
 
     private fun isValidEmail(email: String): Boolean {
-        val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\$"
+        val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$"
         return email.matches(emailRegex.toRegex())
     }
 

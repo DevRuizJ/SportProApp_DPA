@@ -1,0 +1,361 @@
+rules_version = '2';
+// users/{uid}: private onboarding profile. uid immutable; email mirrors verified Auth; names <=80;
+// selectedRole is ONLY a navigation preference, never an academy authorization.
+// birthDateMillis nullable only for ADM/DT or imported users with a signed role.
+// isActive is server-managed after creation. timestamps are server timestamps.
+// All business collections remain closed until their scoped ACLs are implemented.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function importedRole(role) {
+      return request.auth.token.get('app_role', '') == role ||
+        request.auth.token.get('role', '') == role;
+    }
+    function validProfile(data, uid) {
+      return data.keys().hasAll(['uid', 'email', 'names', 'lastNames', 'selectedRole',
+          'birthDateMillis', 'isActive', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'names', 'lastNames', 'selectedRole',
+          'birthDateMillis', 'isActive', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid == uid && data.uid.size() <= 128 &&
+        data.email is string && data.email.size() <= 254 &&
+        data.email == request.auth.token.email &&
+        data.names is string && data.names.size() > 0 && data.names.size() <= 80 &&
+        data.lastNames is string && data.lastNames.size() <= 80 &&
+        (data.lastNames.size() > 0 || importedRole(data.selectedRole)) &&
+        data.selectedRole in ['ADM', 'DT', 'JUG', 'PAD'] &&
+        (data.birthDateMillis is int &&
+          data.birthDateMillis >= -2208988800000 &&
+          data.birthDateMillis <= request.time.toMillis() ||
+          data.birthDateMillis == null &&
+            (data.selectedRole in ['ADM', 'DT'] || importedRole(data.selectedRole))) &&
+        data.isActive is bool && data.isActive == true &&
+        data.createdAt is timestamp && data.createdAt == request.time &&
+        data.updatedAt is timestamp && data.updatedAt == request.time;
+    }
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create: if isOwner(uid) && validProfile(request.resource.data, uid);
+      // Only copy the verified Firebase Auth email; no role/identity/activation changes.
+      allow update: if isOwner(uid) && resource.data.isActive == true &&
+        request.auth.token.get('email_verified', false) == true &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'updatedAt']) &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() > 0 && request.resource.data.email.size() <= 254 &&
+        request.resource.data.email == request.auth.token.email &&
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    function activeUser() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+    function trustedEditor() {
+      return activeUser() && (importedRole('ADM') || importedRole('DT'));
+    }
+    function canView(m) { return activeUser() && request.auth.uid in m.viewerUids; }
+    function canOperate(m) { return trustedEditor() && request.auth.uid in m.operatorUids; }
+    function eventTypes() {
+      return ['period_start', 'period_end', 'goal', 'goal_kick', 'throw_in', 'corner_kick',
+        'foul', 'yellow_card', 'red_card', 'penalty', 'offside', 'substitution'];
+    }
+    function matchData(mid) { return get(/databases/$(database)/documents/matches/$(mid)).data; }
+    function validCatalog(d) {
+      return d.keys().hasOnly(['ownerUid', 'category', 'enabled', 'version', 'updatedAt']) &&
+        d.ownerUid == request.auth.uid && d.category is string && d.category.size() > 0 && d.category.size() <= 80 &&
+        d.enabled is list && d.enabled.size() <= 12 && d.enabled.hasOnly(eventTypes()) &&
+        d.enabled.hasAll(['period_start', 'period_end']) && d.version is int &&
+        d.updatedAt == request.time;
+    }
+    match /clockProbes/{uid} {
+      allow get: if isOwner(uid) && activeUser();
+      allow create, update: if isOwner(uid) && activeUser() &&
+        request.resource.data.keys().hasOnly(['at']) && request.resource.data.at == request.time;
+      allow list, delete: if false;
+    }
+    match /matchCatalogs/{id} {
+      // Public taxonomy only. No personal information belongs in catalog documents.
+      allow read: if activeUser();
+      allow create: if trustedEditor() && validCatalog(request.resource.data) && request.resource.data.version == 1;
+      allow update: if trustedEditor() && resource.data.ownerUid == request.auth.uid &&
+        validCatalog(request.resource.data) && request.resource.data.category == resource.data.category &&
+        request.resource.data.version == resource.data.version + 1;
+      allow delete: if false;
+    }
+    function validMatchCreate(d) {
+      return d.keys().hasOnly(['ownerUid', 'home', 'away', 'category', 'catalogId', 'periodMinutes',
+        'viewerUids', 'operatorUids', 'phase', 'accumulatedSeconds', 'startedAt', 'clockVersion',
+        'lastClockEvent', 'createdAt', 'updatedAt']) &&
+        d.ownerUid == request.auth.uid &&
+        d.home is string && d.home.size() > 0 && d.home.size() <= 80 &&
+        d.away is string && d.away.size() > 0 && d.away.size() <= 80 &&
+        d.category is string && d.category.size() > 0 && d.category.size() <= 80 &&
+        d.catalogId is string &&
+        getAfter(/databases/$(database)/documents/matchCatalogs/$(d.catalogId)).data.ownerUid == d.ownerUid &&
+        getAfter(/databases/$(database)/documents/matchCatalogs/$(d.catalogId)).data.category == d.category &&
+        d.periodMinutes is int && d.periodMinutes >= 5 && d.periodMinutes <= 60 &&
+        d.viewerUids is list && d.viewerUids.size() <= 100 &&
+        d.operatorUids is list && d.operatorUids.size() <= 10 &&
+        request.auth.uid in d.operatorUids && d.viewerUids.hasAll(d.operatorUids) &&
+        d.phase == 'READY' && d.accumulatedSeconds == 0 && d.startedAt == null &&
+        d.clockVersion == 0 && d.lastClockEvent == '' &&
+        d.createdAt == request.time && d.updatedAt == request.time;
+    }
+    function running(phase) { return phase in ['FIRST', 'SECOND']; }
+    function validClockChange(mid, old, d) {
+      let wasRunning = running(old.phase);
+      let isRunning = running(d.phase);
+      let elapsed = old.accumulatedSeconds +
+        (wasRunning ? (request.time.toMillis() - old.startedAt.toMillis()) / 1000 : 0);
+      // A forgotten running match reaches the supported four-hour limit; it can still close.
+      let expectedElapsed = elapsed > 14400 ? 14400 : elapsed;
+      let boundary = old.phase in ['READY', 'HALF_TIME'] ||
+        d.phase in ['HALF_TIME', 'FINISHED'];
+      return d.diff(old).affectedKeys().hasOnly(['phase', 'accumulatedSeconds', 'startedAt',
+          'clockVersion', 'lastClockEvent', 'updatedAt']) &&
+        d.clockVersion == old.clockVersion + 1 && d.updatedAt == request.time &&
+        d.accumulatedSeconds is int && d.accumulatedSeconds >= old.accumulatedSeconds &&
+        d.accumulatedSeconds <= 14400 &&
+        (wasRunning ? d.accumulatedSeconds >= expectedElapsed - 5 && d.accumulatedSeconds <= expectedElapsed + 5 :
+          d.accumulatedSeconds == old.accumulatedSeconds) &&
+        (isRunning ? d.startedAt == request.time : d.startedAt == null) &&
+        ((old.phase == 'READY' && d.phase == 'FIRST') ||
+         (old.phase == 'FIRST' && d.phase in ['PAUSED_FIRST', 'HALF_TIME']) ||
+         (old.phase == 'PAUSED_FIRST' && d.phase in ['FIRST', 'HALF_TIME']) ||
+         (old.phase == 'HALF_TIME' && d.phase == 'SECOND') ||
+         (old.phase == 'SECOND' && d.phase in ['PAUSED_SECOND', 'FINISHED']) ||
+         (old.phase == 'PAUSED_SECOND' && d.phase in ['SECOND', 'FINISHED'])) &&
+        (boundary ? d.lastClockEvent is string && d.lastClockEvent.size() > 0 &&
+          getAfter(/databases/$(database)/documents/matches/$(mid)/events/$(d.lastClockEvent)).data.typeId ==
+            (isRunning ? 'period_start' : 'period_end') &&
+          getAfter(/databases/$(database)/documents/matches/$(mid)/events/$(d.lastClockEvent)).data.seconds == d.accumulatedSeconds :
+          d.lastClockEvent == '');
+    }
+    function validEvent(d, eid) {
+      return d.keys().hasOnly(['eventId', 'operationId', 'version', 'typeId', 'seconds', 'side',
+        'player', 'otherPlayer', 'detail', 'observations', 'voided', 'actorUid', 'reason',
+        'recordedAt', 'catalogVersion', 'capturedAtMillis']) &&
+        d.eventId == eid && d.operationId is string && d.operationId.matches('[a-zA-Z0-9_-]{1,128}') &&
+        d.version is int && d.version > 0 && d.typeId in eventTypes() &&
+        d.seconds is int && d.seconds >= 0 && d.seconds <= 14400 &&
+        d.player is string && d.player.size() <= 100 &&
+        d.otherPlayer is string && d.otherPlayer.size() <= 100 &&
+        d.detail is string && d.detail.size() <= 200 &&
+        d.observations is string && d.observations.size() <= 2000 &&
+        d.voided is bool && d.actorUid == request.auth.uid &&
+        d.reason is string && d.reason.size() <= 500 &&
+        d.recordedAt == request.time && d.catalogVersion is int &&
+        d.capturedAtMillis is int &&
+        (d.typeId in ['period_start', 'period_end'] ? d.side == '' :
+          d.side in ['HOME', 'AWAY']) &&
+        (!(d.typeId in ['goal', 'yellow_card', 'red_card']) || d.detail.size() > 0) &&
+        (d.typeId != 'substitution' || d.player == '' || d.otherPlayer == '' || d.player != d.otherPlayer);
+    }
+    function hasNewHistory(mid, eid, d) {
+      return !exists(/databases/$(database)/documents/matches/$(mid)/events/$(eid)/history/$(d.operationId)) &&
+        getAfter(/databases/$(database)/documents/matches/$(mid)/events/$(eid)/history/$(d.operationId)).data == d;
+    }
+    function validNewEvent(mid, eid, d) {
+      let m = matchData(mid);
+      let afterMatch = getAfter(/databases/$(database)/documents/matches/$(mid)).data;
+      let catalog = get(/databases/$(database)/documents/matchCatalogs/$(m.catalogId)).data;
+      return d.version == 1 && d.voided == false && d.reason == '' &&
+        (d.typeId in ['period_start', 'period_end'] ?
+          afterMatch.clockVersion == m.clockVersion + 1 && afterMatch.lastClockEvent == eid &&
+          d.seconds == afterMatch.accumulatedSeconds && d.catalogVersion == 0 :
+          m.phase != 'READY' && d.typeId in catalog.enabled && d.catalogVersion == catalog.version);
+    }
+    match /matches/{mid} {
+      allow get: if canView(resource.data) || (trustedEditor() && !exists(/databases/$(database)/documents/matches/$(mid)));
+      allow list: if canView(resource.data);
+      allow create: if trustedEditor() && validMatchCreate(request.resource.data);
+      allow update: if canOperate(resource.data) && validClockChange(mid, resource.data, request.resource.data);
+      allow delete: if false;
+      match /events/{eid} {
+        allow read: if canView(matchData(mid));
+        allow create: if canOperate(matchData(mid)) && validEvent(request.resource.data, eid) &&
+          validNewEvent(mid, eid, request.resource.data) && hasNewHistory(mid, eid, request.resource.data);
+        allow update: if canOperate(matchData(mid)) && validEvent(request.resource.data, eid) &&
+          !(resource.data.typeId in ['period_start', 'period_end']) &&
+          !(request.resource.data.typeId in ['period_start', 'period_end']) &&
+          resource.data.voided == false && request.resource.data.version == resource.data.version + 1 &&
+          request.resource.data.reason.size() > 0 && hasNewHistory(mid, eid, request.resource.data);
+        allow delete: if false;
+        match /history/{operation} {
+          allow read: if canView(matchData(mid));
+          allow create: if canOperate(matchData(mid)) && request.resource.data.operationId == operation &&
+            request.resource.data == getAfter(/databases/$(database)/documents/matches/$(mid)/events/$(eid)).data;
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    // Scoped authorization: clubAccess/{clubId_uid} is the effective membership.
+    // Platform authority is provisioned once through IAM/Admin, never inferred from ADM/email.
+    // Only public club metadata is discoverable; invitations reveal minimum sports data.
+    function platformAdmin() {
+      let authority = /databases/$(database)/documents/platformAuthorities/$(request.auth.uid);
+      return activeUser() && (request.auth.token.get('platform_admin', false) == true ||
+        exists(authority) && get(authority).data.active == true);
+    }
+    function clubRole(club, role) {
+      let p = /databases/$(database)/documents/clubAccess/$(club + '_' + request.auth.uid);
+      return activeUser() && exists(p) && get(p).data.status == 'APPROVED' && get(p).data.role == role;
+    }
+    function clubAdmin(club) { return platformAdmin() || clubRole(club, 'ADM'); }
+    match /platformAuthorities/{uid} {
+      allow get: if isOwner(uid) && activeUser();
+      allow list, create, update, delete: if false;
+    }
+    function shortString(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function parentAccount() {
+      return activeUser() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.selectedRole == 'PAD';
+    }
+    function applicantName() {
+      let u = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return u.lastNames == '' ? u.names : u.names + ' ' + u.lastNames;
+    }
+    function validDecision(old, d) {
+      return d.diff(old).affectedKeys().hasOnly(['status', 'decidedAt', 'decidedBy', 'reason']) &&
+        ((old.status == 'PENDING' && d.status in ['APPROVED', 'REJECTED']) ||
+         (old.status == 'APPROVED' && d.status == 'REVOKED')) &&
+        d.decidedAt == request.time && d.decidedBy == request.auth.uid &&
+        shortString(d.reason, 1, 500);
+    }
+    match /clubs/{club} {
+      allow read: if activeUser();
+      allow create: if platformAdmin() &&
+        request.resource.data.keys().hasOnly(['name', 'description', 'createdBy', 'createdAt']) &&
+        shortString(request.resource.data.name, 1, 80) &&
+        shortString(request.resource.data.description, 0, 500) &&
+        request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    match /clubAccess/{id} {
+      allow read: if activeUser() && (resource.data.uid == request.auth.uid || clubAdmin(resource.data.clubId));
+      allow get: if activeUser() && !exists(/databases/$(database)/documents/clubAccess/$(id)) &&
+        id.matches('.*_' + request.auth.uid);
+      allow create: if activeUser() && validAccessRequest(id, request.resource.data);
+      allow update: if activeUser() && resource.data.uid != request.auth.uid &&
+        (resource.data.role == 'ADM' ? platformAdmin() : clubAdmin(resource.data.clubId)) &&
+        validDecision(resource.data, request.resource.data);
+      allow delete: if false;
+    }
+    function validAccessRequest(id, d) {
+      return d.keys().hasOnly(['uid', 'clubId', 'clubName', 'name', 'email', 'role',
+          'status', 'createdAt', 'decidedAt', 'decidedBy', 'reason']) &&
+        d.uid == request.auth.uid && shortString(d.clubId, 1, 128) &&
+        id == d.clubId + '_' + request.auth.uid &&
+        d.clubName == get(/databases/$(database)/documents/clubs/$(d.clubId)).data.name &&
+        d.name == applicantName() && shortString(d.name, 1, 161) &&
+        d.email == request.auth.token.email && shortString(d.email, 1, 254) &&
+        d.role in ['ADM', 'DT', 'JUG', 'PAD'] && d.status == 'PENDING' &&
+        d.createdAt == request.time && d.decidedAt == null && d.decidedBy == '' && d.reason == '';
+    }
+    function approvedParent(player) {
+      let p = /databases/$(database)/documents/familyLinks/$(player + '_' + request.auth.uid);
+      return activeUser() && exists(p) && get(p).data.status == 'APPROVED';
+    }
+    match /clubPlayers/{player} {
+      allow read: if clubAdmin(resource.data.clubId) || approvedParent(player);
+      allow create: if clubAdmin(request.resource.data.clubId) &&
+        request.resource.data.keys().hasOnly(['clubId', 'name', 'category', 'createdBy', 'createdAt']) &&
+        shortString(request.resource.data.clubId, 1, 128) &&
+        exists(/databases/$(database)/documents/clubs/$(request.resource.data.clubId)) &&
+        shortString(request.resource.data.name, 1, 100) &&
+        shortString(request.resource.data.category, 1, 80) &&
+        request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    match /familyInvitations/{code} {
+      allow get: if activeUser() && (clubAdmin(resource.data.clubId) ||
+        parentAccount() && resource.data.consumedBy == '' && resource.data.expiresAt > request.time);
+      allow list: if false;
+      allow create: if clubAdmin(request.resource.data.clubId) && validFamilyInvitation(code, request.resource.data);
+      allow update: if parentAccount() && resource.data.expiresAt > request.time &&
+        resource.data.consumedBy == '' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consumedBy']) &&
+        request.resource.data.consumedBy == request.auth.uid &&
+        getAfter(/databases/$(database)/documents/familyLinks/$(resource.data.playerId + '_' + request.auth.uid)).data.invitationId == code &&
+        getAfter(/databases/$(database)/documents/familyLinks/$(resource.data.playerId + '_' + request.auth.uid)).data.status == 'PENDING';
+      allow delete: if false;
+    }
+    function validFamilyInvitation(code, d) {
+      let player = get(/databases/$(database)/documents/clubPlayers/$(d.playerId)).data;
+      return code.matches('[a-f0-9]{32}') &&
+        d.keys().hasOnly(['clubId', 'clubName', 'playerId', 'playerName', 'category',
+          'createdBy', 'createdAt', 'expiresAt', 'consumedBy']) &&
+        shortString(d.clubId, 1, 128) && shortString(d.playerId, 1, 128) &&
+        player.clubId == d.clubId && d.playerName == player.name && d.category == player.category &&
+        d.clubName == get(/databases/$(database)/documents/clubs/$(d.clubId)).data.name &&
+        d.createdBy == request.auth.uid && d.createdAt == request.time &&
+        d.expiresAt is timestamp && d.expiresAt > request.time &&
+        d.expiresAt <= request.time + duration.value(25, 'h') && d.consumedBy == '';
+    }
+    match /familyLinks/{id} {
+      allow read: if activeUser() && (resource.data.parentUid == request.auth.uid || clubAdmin(resource.data.clubId));
+      allow get: if parentAccount() && !exists(/databases/$(database)/documents/familyLinks/$(id)) &&
+        id.matches('.*_' + request.auth.uid);
+      allow create: if parentAccount() && validFamilyRequest(id, request.resource.data);
+      allow update: if clubAdmin(resource.data.clubId) && resource.data.parentUid != request.auth.uid &&
+        validDecision(resource.data, request.resource.data);
+      allow delete: if false;
+    }
+    function validFamilyRequest(id, d) {
+      let invitation = get(/databases/$(database)/documents/familyInvitations/$(d.invitationId)).data;
+      return d.keys().hasOnly(['parentUid', 'parentName', 'clubId', 'clubName', 'playerId',
+          'playerName', 'category', 'invitationId', 'status', 'createdAt', 'decidedAt', 'decidedBy', 'reason']) &&
+        shortString(d.invitationId, 32, 32) && shortString(d.playerId, 1, 128) &&
+        d.parentUid == request.auth.uid && id == d.playerId + '_' + request.auth.uid &&
+        d.parentName == applicantName() && shortString(d.parentName, 1, 161) &&
+        invitation.consumedBy == '' && invitation.expiresAt > request.time &&
+        getAfter(/databases/$(database)/documents/familyInvitations/$(d.invitationId)).data.consumedBy == request.auth.uid &&
+        d.clubId == invitation.clubId && d.clubName == invitation.clubName &&
+        d.playerId == invitation.playerId && d.playerName == invitation.playerName &&
+        d.category == invitation.category && d.status == 'PENDING' &&
+        d.createdAt == request.time && d.decidedAt == null && d.decidedBy == '' && d.reason == '';
+    }
+
+
+    function teamStaff(d) {
+      return clubAdmin(d.clubId) || (clubRole(d.clubId, 'DT') && d.coachUid == request.auth.uid);
+    }
+    function validTeam(d) {
+      let coach = get(/databases/$(database)/documents/clubAccess/$(d.clubId + '_' + d.coachUid)).data;
+      return d.keys().hasOnly(['clubId', 'name', 'category', 'coachUid', 'coachName', 'createdBy', 'createdAt', 'updatedAt']) &&
+        shortString(d.clubId, 1, 128) && shortString(d.name, 1, 80) && shortString(d.category, 1, 80) &&
+        shortString(d.coachUid, 1, 128) && coach.role == 'DT' && coach.status == 'APPROVED' &&
+        d.coachName == coach.name && d.updatedAt == request.time;
+    }
+    match /sportsTeams/{team} {
+      allow read: if teamStaff(resource.data);
+      allow create: if clubAdmin(request.resource.data.clubId) && validTeam(request.resource.data) &&
+        request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update: if clubAdmin(resource.data.clubId) && validTeam(request.resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['coachUid', 'coachName', 'updatedAt']);
+      allow delete: if false;
+      match /roster/{player} {
+        function teamData() { return get(/databases/$(database)/documents/sportsTeams/$(team)).data; }
+        allow read: if teamStaff(teamData());
+        allow create: if clubAdmin(teamData().clubId) &&
+          request.resource.data.keys().hasOnly(['name', 'active', 'createdAt', 'updatedBy', 'updatedAt']) &&
+          get(/databases/$(database)/documents/clubPlayers/$(player)).data.clubId == teamData().clubId &&
+          request.resource.data.name == get(/databases/$(database)/documents/clubPlayers/$(player)).data.name &&
+          request.resource.data.active == true && request.resource.data.createdAt == request.time &&
+          request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+        allow update: if clubAdmin(teamData().clubId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'updatedBy', 'updatedAt']) &&
+          request.resource.data.active is bool && request.resource.data.updatedBy == request.auth.uid &&
+          request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

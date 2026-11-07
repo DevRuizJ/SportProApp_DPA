@@ -13,9 +13,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class MonthlyFeeRepository(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences = LocalAccountScope.preferences(context, PREFERENCES_NAME)
 
-    val players: List<FeePlayer> = demoPlayers
+    val players: List<FeePlayer> = emptyList()
 
     var fees by mutableStateOf(loadFees())
         private set
@@ -57,7 +57,7 @@ class MonthlyFeeRepository(context: Context) {
     }
 
     private fun loadFees(): List<MonthlyFee> {
-        val saved = preferences.getString(FEES_KEY, null) ?: return demoFees()
+        val saved = preferences.getString(FEES_KEY, null) ?: return emptyList()
         val array = JSONArray(saved)
         return buildList {
             for (index in 0 until array.length()) {

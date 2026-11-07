@@ -1,0 +1,13 @@
+{
+  "name": "sportpro-firestore-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 rules.test.mjs live-match.test.mjs",
+    "test:auth": "node --test account-security.test.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.0",
+    "firebase": "12.5.0"
+  }
+}

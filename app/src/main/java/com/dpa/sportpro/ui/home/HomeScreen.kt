@@ -61,6 +61,9 @@ fun HomeScreen(
     onConvocationsClick: () -> Unit = {},
     onTacticalLineupClick: () -> Unit = {},
     onEventCatalogClick: () -> Unit = {},
+    onLiveMatchesClick: () -> Unit = {},
+    onClubAccessClick: () -> Unit = {},
+    onAccountClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
@@ -166,7 +169,21 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (userProfile.role) {
+            FeatureCard(
+                if (userProfile.role == UserRole.PARENT) "Mis hijos y clubes" else "Mis clubes y solicitudes",
+                "Vinculaciones, permisos y administración del club",
+                Icons.Default.Group,
+                onClick = onClubAccessClick,
+            )
+            FeatureCard(
+                "Partidos en vivo",
+                "Registrar eventos y seguir el marcador",
+                Icons.Default.SportsSoccer,
+                onClick = onLiveMatchesClick,
+            )
+            if (userProfile.role in setOf(UserRole.ADMIN, UserRole.COACH) && userProfile.authorizedRole == null) {
+                Text("Gestiona tu solicitud y consulta tus permisos en Mis clubes y solicitudes. Los permisos se conceden por club.", color = TextMuted)
+            } else when (userProfile.role) {
                 UserRole.COACH -> {
                     FeatureCard(
                         "Gestión de Plantilla",
@@ -232,9 +249,9 @@ fun HomeScreen(
                 UserRole.PARENT -> {
                     FeatureCard(
                         "Mis Hijos Vinculados",
-                        "Ficha deportiva de Mateo Silva Rossi",
+                        "Consulta de jugadores vinculados",
                         Icons.Default.Group,
-                        onClick = onPlayerProfileClick,
+                        onClick = onClubAccessClick,
                     )
                     FeatureCard(
                         "Autorizaciones y Cuotas",
@@ -251,9 +268,10 @@ fun HomeScreen(
                 }
                 UserRole.ADMIN -> {
                     FeatureCard(
-                        "Gestión Global de Usuarios",
-                        "Aprobación de cuentas y asignación de roles",
+                        "Administración del club",
+                        "Solicitudes y vínculos de tus clubes autorizados",
                         Icons.Default.Group,
+                        onClick = onClubAccessClick,
                     )
                     FeatureCard(
                         "Configuración de Equipos",
@@ -286,6 +304,13 @@ fun HomeScreen(
                     )
                 }
             }
+
+            FeatureCard(
+                "Mi cuenta",
+                "Cambiar correo o contraseña",
+                Icons.Default.Settings,
+                onClick = onAccountClick,
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -356,6 +381,6 @@ private fun getRoleWelcomeMessage(role: UserRole): String {
         UserRole.PARENT ->
             "Bienvenido. Aquí puedes hacer seguimiento del rendimiento de tu hijo, autorizar eventos y estar al tanto del calendario del equipo."
         UserRole.ADMIN ->
-            "Bienvenido Administrador. Tienes acceso completo a la gestión de usuarios, roles, finanzas y configuración del club."
+            "Gestiona los módulos de tu club según los permisos asignados."
     }
 }
