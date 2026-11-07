@@ -78,14 +78,15 @@ sealed class Screen(val route: String) {
         fun createRoute(viewerRole: String): String = "moderation/$viewerRole"
     }
 
-    data object Home : Screen("home/{roleCode}/{userId}/{userName}/{verified}") {
+    data object Home : Screen("home/{roleCode}/{userId}/{userName}/{verified}/{email}") {
         fun createRoute(
             roleCode: String,
             userId: String,
             userName: String,
             verified: Boolean,
+            email: String,
         ): String =
             "home/$roleCode/${android.net.Uri.encode(userId)}/" +
-                "${android.net.Uri.encode(userName)}/$verified"
+                "${android.net.Uri.encode(userName)}/$verified/${android.net.Uri.encode(email)}"
     }
 }

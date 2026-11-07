@@ -193,16 +193,9 @@ fun PlayerTechnicalProfileScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = if (editing) ::cancelEditing else onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
                 Text(
                     text = if (editing) "Editar ficha" else "Ficha del Jugador",
-                    modifier = Modifier.weight(1f).padding(start = 6.dp),
+                    modifier = Modifier.weight(1f),
                     color = TextWhite,
                     fontSize = 23.sp,
                     fontWeight = FontWeight.Bold,

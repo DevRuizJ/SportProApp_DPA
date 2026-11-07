@@ -82,14 +82,7 @@ fun MatchChronicleScreen(viewerRole: UserRole, onBackClick: () -> Unit) {
                     .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
-                Column(modifier = Modifier.padding(start = 4.dp)) {
+                Column {
                     Text(
                         "Resumen IA",
                         color = TextWhite,

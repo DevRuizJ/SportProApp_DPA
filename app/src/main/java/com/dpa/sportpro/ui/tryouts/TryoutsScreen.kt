@@ -125,14 +125,7 @@ fun TryoutsScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
-                Column(modifier = Modifier.padding(start = 4.dp)) {
+                Column {
                     Text(
                         text = "Tryouts Abiertos",
                         color = TextWhite,

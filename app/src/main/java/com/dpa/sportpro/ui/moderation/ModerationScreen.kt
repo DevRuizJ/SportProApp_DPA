@@ -83,13 +83,6 @@ fun ModerationScreen(viewerRole: UserRole, onBackClick: () -> Unit) {
                     .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
                 Column(modifier = Modifier.padding(start = 4.dp)) {
                     Text(
                         "Moderación",

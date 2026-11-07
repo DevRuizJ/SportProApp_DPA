@@ -120,16 +120,9 @@ fun MonthlyFeesScreen(viewerRole: UserRole, viewerName: String, onBackClick: () 
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
                 Text(
                     "Mensualidades",
-                    modifier = Modifier.weight(1f).padding(start = 6.dp),
+                    modifier = Modifier.weight(1f),
                     color = TextWhite,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,

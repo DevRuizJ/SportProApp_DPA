@@ -62,14 +62,7 @@ fun MatchStatisticsScreen(
                     .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                androidx.compose.material3.IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
-                Column(modifier = Modifier.padding(start = 4.dp)) {
+                Column {
                     Text(
                         text = "Estadísticas",
                         color = TextWhite,

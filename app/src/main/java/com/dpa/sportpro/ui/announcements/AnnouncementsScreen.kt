@@ -140,14 +140,7 @@ fun AnnouncementsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
-                Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Anuncios",
                         color = TextWhite,

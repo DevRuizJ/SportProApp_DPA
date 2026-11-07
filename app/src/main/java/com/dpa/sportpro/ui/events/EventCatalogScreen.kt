@@ -84,13 +84,6 @@ fun EventCatalogScreen(viewerRole: UserRole, onBackClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
                 Column(modifier = Modifier.padding(start = 6.dp)) {
                     Text(
                         "Catálogo de Eventos",

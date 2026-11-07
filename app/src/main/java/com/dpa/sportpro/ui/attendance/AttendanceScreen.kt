@@ -124,16 +124,8 @@ fun AttendanceScreen(viewerRole: UserRole, viewerName: String, onBackClick: () -
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
                 Text(
                     "Control de Asistencia",
-                    modifier = Modifier.padding(start = 6.dp),
                     color = TextWhite,
                     fontSize = 23.sp,
                     fontWeight = FontWeight.Bold,

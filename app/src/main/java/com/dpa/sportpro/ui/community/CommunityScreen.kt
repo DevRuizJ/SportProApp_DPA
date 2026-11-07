@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Forum
@@ -91,7 +90,11 @@ private val CheerBlue = Color(0xFF2196F3)
 private val AvatarBlue = Color(0xFF168EF0)
 
 @Composable
-fun CommunityScreen(userProfile: UserProfile, onBackClick: () -> Unit) {
+fun CommunityScreen(
+    userProfile: UserProfile,
+    modifier: Modifier = Modifier,
+    showHeader: Boolean = true,
+) {
     val context = LocalContext.current
     val repository = remember(context) { CommunityRepository.getInstance(context) }
     val chronicleRepository = remember(context) { MatchChronicleRepository.getInstance(context) }
@@ -143,33 +146,27 @@ fun CommunityScreen(userProfile: UserProfile, onBackClick: () -> Unit) {
             }
         }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
+    Surface(modifier = modifier.fillMaxSize(), color = DarkBackground) {
         Column(
             modifier =
                 Modifier.fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
+            if (showHeader) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(
+                            text = "Comunidad",
+                            color = TextWhite,
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text("La red de fútbol base", color = TextMuted, fontSize = 14.sp)
+                    }
                 }
-                Column(modifier = Modifier.padding(start = 4.dp)) {
-                    Text(
-                        text = "Comunidad",
-                        color = TextWhite,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text("La red de fútbol base", color = TextMuted, fontSize = 14.sp)
-                }
+                Spacer(modifier = Modifier.height(20.dp))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             if (!visibleToCommunity) {
                 EmptyCommunity(

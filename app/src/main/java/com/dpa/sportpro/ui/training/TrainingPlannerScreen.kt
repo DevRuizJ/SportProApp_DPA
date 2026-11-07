@@ -96,7 +96,7 @@ fun TrainingPlannerScreen(viewerRole: UserRole, viewerName: String, onBackClick:
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text("Planificación disponible solo para el Director Técnico.", color = TextWhite)
-                TextButton(onClick = onBackClick) { Text("Volver", color = NeonGreen) }
+
             }
         }
         return
@@ -141,16 +141,8 @@ fun TrainingPlannerScreen(viewerRole: UserRole, viewerName: String, onBackClick:
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 18.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = TextWhite,
-                    )
-                }
                 Text(
                     "Planificar Sesión",
-                    modifier = Modifier.padding(start = 6.dp),
                     color = TextWhite,
                     fontSize = 25.sp,
                     fontWeight = FontWeight.Bold,

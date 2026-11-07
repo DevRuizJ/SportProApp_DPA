@@ -86,16 +86,9 @@ fun AcademiesScreen(onBackClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = TextWhite,
-                        )
-                    }
                     Text(
                         text = "Academias",
-                        modifier = Modifier.weight(1f).padding(start = 8.dp),
+                        modifier = Modifier.weight(1f),
                         color = TextWhite,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
